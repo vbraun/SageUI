@@ -31,12 +31,19 @@ def check_gui_prerequisites():
         sys.exit(1)
 
 
-def launch_gui():
+def launch_gui(debug=False):
     check_gui_prerequisites()
     import gtk
     from sageui.gui.app import Application
     app = Application()
-    gtk.main()
+    import sageui
+    sageui.app = app
+    if debug:
+        from IPython.lib.inputhook import enable_gtk
+        enable_gtk()
+    else:
+        gtk.main()
+
 
 
 description = """
@@ -50,7 +57,10 @@ def launch():
     parser.add_argument('--gui', dest='gui', action='store_true',
                         default=True, 
                         help='start the gui')
+    parser.add_argument('--debug', dest='debug', action='store_false',
+                        default=False, 
+                        help='debug')
     args = parser.parse_args()
     
     if args.gui:
-        launch_gui()
+        launch_gui(debug=args.debug)

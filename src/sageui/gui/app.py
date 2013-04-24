@@ -27,9 +27,12 @@ class Application:
         builder.add_from_file(gladefile)
         self.window = builder.get_object('main_window')
         self.status = builder.get_object('statusbar')
+        self.terminal = builder.get_object('terminal')
+        self.editor = builder.get_object('editor')
         self.dlg_about = builder.get_object('about_dialog')
         builder.connect_signals(self)
         self.window.show()
+        
 
     def log(self, msg):
         print 'Log:', msg
@@ -50,4 +53,9 @@ class Application:
 
     def on_main_window_destroy(self, widget, data=None):
         gtk.main_quit()
+
+    def on_main_window_map(self, widget, data=None):
+        print 'map main'
+        self.terminal.configure()
+        
      

@@ -53,18 +53,21 @@
     <property name="stock">gtk-go-forward</property>
     <property name="icon-size">1</property>
   </object>
+  <object class="GtkAdjustment" id="terminal_adjustment">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="main_window">
-    <property name="width_request">1024</property>
-    <property name="height_request">768</property>
     <property name="can_focus">False</property>
     <signal name="destroy" handler="on_main_window_destroy" swapped="no"/>
+    <signal name="map" handler="on_main_window_map" after="yes" swapped="no"/>
     <child>
       <object class="GtkHPaned" id="hpaned">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <child>
           <object class="GtkVBox" id="left_vbox">
-            <property name="width_request">500</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -300,22 +303,45 @@
                 <property name="can_focus">True</property>
                 <property name="expanded">True</property>
                 <child>
-                  <object class="TerminalWidget" id="terminal_widget">
+                  <object class="GtkHBox" id="terminal_hbox">
                     <property name="visible">True</property>
-                    <property name="app_paintable">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="audible_bell">False</property>
-                    <property name="background_tint_color">#ffff0fa0ffff</property>
-                    <property name="encoding">UTF-8</property>
-                    <property name="scroll_on_keystroke">True</property>
-                    <property name="scroll_on_output">False</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkVScrollbar" id="terminal_scrollbar">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="adjustment">terminal_adjustment</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="TerminalWidget" id="terminal">
+                        <property name="visible">True</property>
+                        <property name="app_paintable">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="audible_bell">False</property>
+                        <property name="background_tint_color">#ffff0fa0ffff</property>
+                        <property name="encoding">UTF-8</property>
+                        <property name="scroll_on_keystroke">True</property>
+                        <property name="scroll_on_output">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
                 </child>
                 <child type="label">
-                  <object class="GtkLabel" id="expander_label_shell">
+                  <object class="GtkLabel" id="expander_label_terminal">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Python Shell</property>
+                    <property name="label" translatable="yes">Sage Commandline</property>
                   </object>
                 </child>
               </object>
@@ -375,10 +401,12 @@
             <property name="can_focus">True</property>
             <child>
               <object class="GtkSourceView" id="editor">
+                <property name="width_request">500</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="left_margin">2</property>
                 <property name="right_margin">2</property>
+                <property name="accepts_tab">False</property>
                 <property name="tab_width">4</property>
                 <property name="auto_indent">True</property>
                 <property name="insert_spaces_instead_of_tabs">True</property>
