@@ -1,0 +1,20 @@
+<glade-catalog 
+    name="terminal_plugin" 
+    library="gladepython" 
+    domain="glade-3" 
+    depends="gtk+">
+
+  <init-function>glade_python_init</init-function>
+
+  <glade-widget-classes>
+    <glade-widget-class 
+	title="Sage Commandline" 
+	name="TerminalWidget"
+	generic-name="terminal_widget"/>
+  </glade-widget-classes>
+
+  <glade-widget-group name="python" title="Sage UI Widgets">
+    <glade-widget-class-ref name="TerminalWidget"/>
+  </glade-widget-group>
+
+</glade-catalog>

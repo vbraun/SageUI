@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glade-catalog name="sourceview2" library="gtksourceview-2.0" depends="gtk+">
+
+   <glade-widget-classes>
+      <glade-widget-class name="GtkSourceView" generic-name="sourceview2" title="Source View"/>
+   </glade-widget-classes>
+
+   <glade-widget-group name="gtksourceview2" title="GtkSourceView">
+      <glade-widget-class-ref name="GtkSourceView"/>
+   </glade-widget-group>
+
+</glade-catalog>
+
