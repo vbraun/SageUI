@@ -37,7 +37,7 @@ def check_gui_prerequisites():
 
 def launch_gui(debug=False):
     check_gui_prerequisites()
-    from sageui.view.app import Application
+    from sageui.app import Application
     app = Application()
     if debug:
         from IPython.lib.inputhook import enable_gtk
