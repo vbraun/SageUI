@@ -9,38 +9,36 @@ import os
 def check_gui_prerequisites():
     try:
         import gtk
-    except:
+    except ImportError:
         print 'Fatal: You need the Python GTK interface!'
         sys.exit(1)
     try:
         import pygtk
         pygtk.require('2.0')
-    except:
+    except ImportError:
         print 'Fatal: You need PyGTK version 2 or higher!'
         sys.exit(1)
     try:
         import gtk.glade
-    except:
+    except ImportError:
         print 'Fatal: You need the Python Glade interface!'
         sys.exit(1)
     try:
         import cairo
-    except:
+    except ImportError:
         print 'Fatal: You need the Python Cairo interface!'
         sys.exit(1)
     try: 
         import vte
-    except:
+    except ImportError:
         print 'Fatal: You need VTE!'
         sys.exit(1)
 
 
 def launch_gui(debug=False):
     check_gui_prerequisites()
-    from sageui.gui.app import Application
+    from sageui.view.app import Application
     app = Application()
-    import sageui
-    sageui.app = app
     if debug:
         from IPython.lib.inputhook import enable_gtk
         enable_gtk()
@@ -51,6 +49,7 @@ def launch_gui(debug=False):
         ip.shell.user_global_ns['app'] = app
         ip.start()
     else:
+        import gtk
         gtk.main()
 
 
@@ -68,5 +67,4 @@ def launch():
                         help='debug')
     args = parser.parse_args()
     print args
-    if args.gui:
-        launch_gui(debug=args.debug)
+    launch_gui(debug=args.debug)
