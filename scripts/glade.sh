@@ -12,8 +12,8 @@ if [ ! -x "$rootdir/README.rst" ] ; then
 fi
 
 
-export GLADE_CATALOG_PATH=$rootdir/src/sageui/gui/glade
-export GLADE_MODULE_PATH=$rootdir/src/sageui/gui/glade
+export GLADE_CATALOG_PATH=$rootdir/src/sageui/view/glade
+export GLADE_MODULE_PATH=$rootdir/src/sageui/view/glade
 
 echo $GLADE_CATALOG_PATH
 echo $GLADE_MODULE_PATH

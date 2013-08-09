@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <glade-catalog 
-    name="terminal_plugin" 
+    name="sageui"
     library="gladepython" 
     domain="glade-3" 
     depends="gtk+">
@@ -12,9 +13,13 @@
 	name="TerminalWidget"
 	generic-name="terminal_widget"/>
   </glade-widget-classes>
+  
 
-  <glade-widget-group name="python" title="Sage UI Widgets">
-    <glade-widget-class-ref name="TerminalWidget"/>
+  <glade-widget-group 
+      name="python" 
+      title="Sage UI Widgets">
+    <glade-widget-class-ref 
+	name="TerminalWidget"/>
   </glade-widget-group>
 
 </glade-catalog>
