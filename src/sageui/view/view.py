@@ -26,7 +26,15 @@ class View(object):
     @cached_property
     def main_window(self):
         from main_window import MainWindow
-        return MainWindow(self.glade_file)
+        return MainWindow(self.presenter, self.glade_file)
 
+    @cached_property
+    def about_dialog(self):
+        from about_dialog import AboutDialog
+        return AboutDialog(self.presenter, self.glade_file)
+
+    def terminate(self):
+        self.main_window.destroy()
+        gtk.main_quit()
 
 

@@ -21,6 +21,5 @@ class TerminalWidget(vte.Terminal):
         self.set_color_background(Color('white'))
         self.set_color_foreground(Color('black'))
         #self.set_size(80, -1)
-        print self.get_size_request()
 
 

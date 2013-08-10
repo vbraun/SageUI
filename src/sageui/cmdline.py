@@ -66,5 +66,4 @@ def launch():
                         default=False, 
                         help='debug')
     args = parser.parse_args()
-    print args
     launch_gui(debug=args.debug)

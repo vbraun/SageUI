@@ -4,22 +4,33 @@ import gtk
 from gtksourceview2 import View as GtkSourceView
 
 from buildable import Buildable
+from window import Window
 from terminal_widget import TerminalWidget
 
 
-class MainWindow(Buildable):
+class MainWindow(Buildable, Window):
 
-    def __init__(self, glade_file):
-        Buildable.__init__(self, ['main_window', 'statusbar', 'terminal'])
+    def __init__(self, presenter, glade_file):
+        self.presenter = presenter
+        Buildable.__init__(self, ['main_window', 'main_menubar', 'statusbar', 
+                                  'terminal', 'terminal_adjustment'])
         builder = self.get_builder(glade_file)
-        self.window = builder.get_object('main_window')
-        self.status = builder.get_object('statusbar')
+        Window.__init__(self, builder, 'main_window')
+        self.menu = builder.get_object('main_menubar')
+        self.status = builder.get_object('main_statusbar')
         self.terminal = builder.get_object('terminal')
+        self.terminal_adjustment = builder.get_object('terminal_adjustment')
         builder.connect_signals(self)
 
-    def show(self):
-        self.window.show()
-
     def on_main_window_destroy(self, widget, data=None):
-        gtk.main_quit()
+        self.presenter.terminate()
      
+    def on_main_window_map(self, widget, data=None):
+        self.terminal.configure()
+
+    def on_main_menu_about_activate(self, widget, data=None):
+        self.presenter.show_about()
+
+    def on_main_menu_quit_activate(self, widget, data=None):
+        self.presenter.terminate()
+

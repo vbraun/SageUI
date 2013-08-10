@@ -17,4 +17,15 @@ class Presenter(object):
         self.model = model_class(self)
         self.view.main_window.show()
 
-    
+
+    def terminate(self):
+        """
+        Quit the program
+        """
+        self.view.terminate()
+
+    def show_about(self):
+        self.view.about_dialog.show()
+
+    def hide_about(self):
+        self.view.about_dialog.hide()
