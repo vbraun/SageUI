@@ -58,6 +58,12 @@ description = """
     The Sage UI ..."""
 
 
+def run_doctests(args):
+    from sage.doctest.control import DocTestController
+    DC = DocTestController(*args)
+    err = DC.run()
+    sys.exit(err)
+
 
 def launch():
     from argparse import ArgumentParser
@@ -65,5 +71,11 @@ def launch():
     parser.add_argument('--debug', dest='debug', action='store_true',
                         default=False, 
                         help='debug')
+    parser.add_argument('--doctest', dest='doctest', action='store_true',
+                        default=False, 
+                        help='doctest')
     args = parser.parse_args()
-    launch_gui(debug=args.debug)
+    if args.doctest:
+        run_doctests(args)
+    else:
+        launch_gui(debug=args.debug)
