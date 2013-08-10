@@ -43,14 +43,15 @@ class TracDatabase(object):
         number = ticket.get_number()
         current = self._data.get(number, None)
         if current is not None:
-            ticket.set_last_viewed_time(current.get_last_viewed_time)
+            ticket.set_last_viewed_time(current.get_last_viewed_time())
         self._data[number] = ticket
 
     def get(self, ticket_number):
         return self._data[ticket_number]
     
     def recent_tickets(self, limit=50):
-        lst = [(ticket.get_last_viewed(), ticket) for ticket in self._data.items()]
+        lst = [(ticket.get_last_viewed_time(), ticket) 
+               for ticket in self._data.values()]
         lst.sort()
         return tuple(ticket for time, ticket in lst[:50])
 

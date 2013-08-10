@@ -16,8 +16,7 @@ class Presenter(object):
         self.view = view_class(self)
         self.model = model_class(self)
         self.view.main_window.show()
-        self.view.trac_window.show()
-
+        self.show_trac()
 
     def terminate(self):
         """
@@ -33,9 +32,12 @@ class Presenter(object):
         self.view.about_dialog.hide()
 
     def show_trac(self):
-        ticket_list = self.model.database.recent_tickets()
+        ticket_list = self.model.trac.database.recent_tickets()
         self.view.trac_window.set_ticket_list(ticket_list)
         self.view.trac_window.show()
+
+    def trac_ticket_selected(self, ticket):
+        self.view.trac_window.display_ticket(ticket)
 
     def hide_trac(self):
         self.view.trac_window.hide()

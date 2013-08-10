@@ -51,3 +51,7 @@ class TracTicket(object):
 
     def get_last_viewed_time(self):
         return self._last_viewed
+
+    def get_description(self):
+        default = '+++ no description +++'
+        return self._data.get('description', default)
