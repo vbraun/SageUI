@@ -29,3 +29,9 @@ class Presenter(object):
 
     def hide_about(self):
         self.view.about_dialog.hide()
+
+    def show_notification(self, text):
+        self.view.new_notification_dialog(text).show()
+
+    def hide_notification(self):
+        self.view.hide_notification_dialogs()

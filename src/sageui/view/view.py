@@ -14,6 +14,7 @@ class View(object):
 
     def __init__(self, presenter):
         self.presenter = presenter
+        self._notification_dialogs = []
         
     @cached_property
     def resource_dir(self):
@@ -37,4 +38,13 @@ class View(object):
         self.main_window.destroy()
         gtk.main_quit()
 
+    def new_notification_dialog(self, text):
+        from notification_dialog import NotificationDialog
+        dlg = NotificationDialog(self.presenter, self.glade_file, text)
+        self._notification_dialogs.append(dlg)
+        return dlg
 
+    def hide_notification_dialogs(self):
+        for dlg in self._notification_dialogs:
+            dlg.window.destroy()
+        self._notification_dialogs = []

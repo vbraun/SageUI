@@ -34,3 +34,21 @@ class MainWindow(Buildable, Window):
     def on_main_menu_quit_activate(self, widget, data=None):
         self.presenter.terminate()
 
+    def on_main_menu_new_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: new attached file")
+        
+    def on_main_menu_open_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: open file and attach")
+
+    def on_main_menu_copy_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: copy")
+        
+    def on_main_menu_paste_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: paste")
+        
+    def on_main_menu_trac_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: trac browser")
+        
+    def on_main_menu_git_activate(self, widget, data=None):
+        self.presenter.show_notification("todo: git browser")
+
