@@ -22,9 +22,13 @@ class MainWindow(Buildable, Window):
         self.terminal_adjustment = builder.get_object('terminal_adjustment')
         builder.connect_signals(self)
 
+    def on_main_window_delete_event(self, widget, data=None):
+        print 'main window delete (todo: want to quit y/n if unsaved data)'
+        return False
+
     def on_main_window_destroy(self, widget, data=None):
         self.presenter.terminate()
-     
+
     def on_main_window_map(self, widget, data=None):
         self.terminal.configure()
 
@@ -47,7 +51,7 @@ class MainWindow(Buildable, Window):
         self.presenter.show_notification("todo: paste")
         
     def on_main_menu_trac_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac browser")
+        self.presenter.show_trac()
         
     def on_main_menu_git_activate(self, widget, data=None):
         self.presenter.show_notification("todo: git browser")

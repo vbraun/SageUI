@@ -9,6 +9,7 @@ class Model:
         self.presenter = presenter
 
 
-
+    def terminate(self):
+        pass
 
     

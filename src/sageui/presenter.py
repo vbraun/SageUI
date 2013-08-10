@@ -16,6 +16,7 @@ class Presenter(object):
         self.view = view_class(self)
         self.model = model_class(self)
         self.view.main_window.show()
+        self.view.trac_window.show()
 
 
     def terminate(self):
@@ -23,12 +24,19 @@ class Presenter(object):
         Quit the program
         """
         self.view.terminate()
+        self.model.terminate()
 
     def show_about(self):
         self.view.about_dialog.show()
 
     def hide_about(self):
         self.view.about_dialog.hide()
+
+    def show_trac(self):
+        self.view.trac_window.show()
+
+    def hide_trac(self):
+        self.view.trac_window.hide()
 
     def show_notification(self, text):
         self.view.new_notification_dialog(text).show()

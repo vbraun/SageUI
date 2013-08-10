@@ -30,6 +30,11 @@ class View(object):
         return MainWindow(self.presenter, self.glade_file)
 
     @cached_property
+    def trac_window(self):
+        from trac_window import TracWindow
+        return TracWindow(self.presenter, self.glade_file)
+
+    @cached_property
     def about_dialog(self):
         from about_dialog import AboutDialog
         return AboutDialog(self.presenter, self.glade_file)
