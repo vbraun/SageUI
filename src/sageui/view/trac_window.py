@@ -24,6 +24,11 @@ class TracWindow(Buildable, Window):
         self.comments = builder.get_object('trac_comments')
         builder.connect_signals(self)
 
+    def set_ticket_list(self, ticket_list):
+        self._ticket_list = ticket_list
+        
+
+ 
     def on_trac_window_delete_event(self, widget, data=None):
         self.presenter.hide_trac()
         return True

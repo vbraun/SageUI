@@ -337,10 +337,8 @@
       <column type="guint"/>
       <!-- column-name title -->
       <column type="gchararray"/>
-      <!-- column-name modification_time -->
-      <column type="guint64"/>
-      <!-- column-name last_viewed -->
-      <column type="guint64"/>
+      <!-- column-name ctime -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkWindow" id="trac_window">

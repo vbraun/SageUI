@@ -33,6 +33,8 @@ class Presenter(object):
         self.view.about_dialog.hide()
 
     def show_trac(self):
+        ticket_list = self.model.database.recent_tickets()
+        self.view.trac_window.set_ticket_list(ticket_list)
         self.view.trac_window.show()
 
     def hide_trac(self):
