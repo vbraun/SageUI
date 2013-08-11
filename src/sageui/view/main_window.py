@@ -23,20 +23,20 @@ class MainWindow(Buildable, Window):
         builder.connect_signals(self)
 
     def on_main_window_delete_event(self, widget, data=None):
-        print 'main window delete (todo: want to quit y/n if unsaved data)'
+        self.presenter.hide_terminal_window()
         return False
 
     def on_main_window_destroy(self, widget, data=None):
-        self.presenter.terminate()
-
+        print 'TODO: destroyed. autosave?'
+        
     def on_main_window_map(self, widget, data=None):
         self.terminal.configure()
 
     def on_main_menu_about_activate(self, widget, data=None):
-        self.presenter.show_about()
+        self.presenter.show_about_dialog()
 
     def on_main_menu_quit_activate(self, widget, data=None):
-        self.presenter.terminate()
+        self.presenter.hide_terminal_window()
 
     def on_main_menu_new_activate(self, widget, data=None):
         self.presenter.show_notification("todo: new attached file")
@@ -51,7 +51,7 @@ class MainWindow(Buildable, Window):
         self.presenter.show_notification("todo: paste")
         
     def on_main_menu_trac_activate(self, widget, data=None):
-        self.presenter.show_trac()
+        self.presenter.show_trac_window()
         
     def on_main_menu_git_activate(self, widget, data=None):
         self.presenter.show_notification("todo: git browser")

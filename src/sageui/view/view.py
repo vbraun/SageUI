@@ -14,8 +14,12 @@ class View(object):
 
     def __init__(self, presenter):
         self.presenter = presenter
-        self._notification_dialogs = []
+        self._modal_dialog = None
+        self._open_windows = set()
         
+    def have_open_window(self):
+        return len(self._open_windows) != 0
+
     @cached_property
     def resource_dir(self):
         return os.path.dirname(sys.modules['sageui'].__file__)
@@ -25,14 +29,30 @@ class View(object):
         return os.path.join(self.resource_dir, 'res', 'SageUI.xml')
         
     @cached_property
-    def main_window(self):
+    def terminal_window(self):
         from main_window import MainWindow
         return MainWindow(self.presenter, self.glade_file)
+
+    def show_terminal_window(self):
+        self._open_windows.add(self.terminal_window)
+        self.terminal_window.show()
+
+    def hide_terminal_window(self):
+        self.terminal_window.hide()
+        self._open_windows.remove(self.terminal_window)
 
     @cached_property
     def trac_window(self):
         from trac_window import TracWindow
         return TracWindow(self.presenter, self.glade_file)
+        
+    def show_trac_window(self):
+        self._open_windows.add(self.trac_window)
+        self.trac_window.show()
+
+    def hide_trac_window(self):
+        self.trac_window.hide()
+        self._open_windows.remove(self.trac_window)
 
     @cached_property
     def about_dialog(self):
@@ -40,16 +60,23 @@ class View(object):
         return AboutDialog(self.presenter, self.glade_file)
 
     def terminate(self):
-        self.main_window.destroy()
         gtk.main_quit()
 
     def new_notification_dialog(self, text):
         from notification_dialog import NotificationDialog
         dlg = NotificationDialog(self.presenter, self.glade_file, text)
-        self._notification_dialogs.append(dlg)
+        assert self._modal_dialog is None
+        self._modal_dialog = dlg
         return dlg
 
-    def hide_notification_dialogs(self):
-        for dlg in self._notification_dialogs:
-            dlg.window.destroy()
-        self._notification_dialogs = []
+    def new_error_dialog(self, title, text):
+        from error_dialog import ErrorDialog
+        dlg = ErrorDialog(self.presenter, self.glade_file, title, text)
+        assert self._modal_dialog is None
+        self._modal_dialog = dlg
+        return dlg
+
+    def destroy_modal_dialog(self):
+        assert self._modal_dialog is not None
+        self._modal_dialog.window.destroy()
+        self._modal_dialog = None

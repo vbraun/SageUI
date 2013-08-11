@@ -8,6 +8,7 @@ about data nor about the gui, it just ties the two together.
 
 """
 
+from model.trac_error import TracError
 
 
 class Presenter(object):
@@ -15,35 +16,79 @@ class Presenter(object):
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
         self.model = model_class(self)
-        self.view.main_window.show()
-        self.show_trac()
+        self.show_terminal_window()
+        self.show_trac_window()
 
     def terminate(self):
         """
         Quit the program
         """
-        self.view.terminate()
         self.model.terminate()
+        self.view.terminate()
+        
+    ###################################################################
+    # The window containing the terminal
 
-    def show_about(self):
+    def show_terminal_window(self):
+        return self.view.show_terminal_window()
+
+    def hide_terminal_window(self):
+        self.view.hide_terminal_window()
+        if not self.view.have_open_window():
+            self.terminate()
+
+    ###################################################################
+    # The about dialog
+
+    def show_about_dialog(self):
         self.view.about_dialog.show()
 
-    def hide_about(self):
+    def hide_about_dialog(self):
         self.view.about_dialog.hide()
 
-    def show_trac(self):
+    ###################################################################
+    # The window containing the Sage trac tickets
+
+    def show_trac_window(self):
+        current_ticket = self.model.trac.get_current_ticket()
         ticket_list = self.model.trac.database.recent_tickets()
-        self.view.trac_window.set_ticket_list(ticket_list)
-        self.view.trac_window.show()
+        self.view.trac_window.set_ticket_list(ticket_list, current_ticket)
+        self.view.show_trac_window()
+    
+    def hide_trac_window(self):
+        self.view.hide_trac_window()
+        if not self.view.have_open_window():
+            self.terminate()
 
-    def trac_ticket_selected(self, ticket):
+    def ticket_selected(self, ticket_number):
+        self.model.trac.set_current_ticket(ticket_number)
+        ticket = self.model.trac.get_current_ticket()
+        self.view.trac_window.set_current_ticket(ticket)
         self.view.trac_window.display_ticket(ticket)
+    
+    def load_ticket(self, ticket_number):
+        try:
+            self.model.trac.load(ticket_number) 
+        except TracError as msg:
+            return self.show_error('Cannot download ticket', str(msg))
+        self.model.trac.set_current_ticket(ticket_number)
+        loaded_ticket = self.model.trac.get_current_ticket()
+        ticket_list = self.model.trac.database.recent_tickets()
+        self.view.trac_window.set_ticket_list(ticket_list, loaded_ticket)
+        self.view.trac_window.display_ticket(loaded_ticket)
 
-    def hide_trac(self):
-        self.view.trac_window.hide()
+    ###################################################################
+    # Misc. notification dialog (modal)
 
     def show_notification(self, text):
         self.view.new_notification_dialog(text).show()
 
-    def hide_notification(self):
-        self.view.hide_notification_dialogs()
+    def destroy_modal_dialog(self):
+        self.view.destroy_modal_dialog()
+ 
+    ###################################################################
+    # Error dialog (modal)
+
+    def show_error(self, title, text):
+        self.view.new_error_dialog(title, text).show()
+

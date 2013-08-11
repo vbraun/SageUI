@@ -13,5 +13,5 @@ class AboutDialog(Buildable, Window):
         builder.connect_signals(self)
 
     def on_about_dialog_response(self, widget, data=None):
-        self.presenter.hide_about()
+        self.presenter.hide_about_dialog()
 

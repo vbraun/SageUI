@@ -22,8 +22,8 @@ class NotificationDialog(Buildable, Window):
         builder.connect_signals(self)
 
     def on_notification_ok_clicked(self, widget, data=None):
-        self.presenter.hide_notification()
+        self.presenter.destroy_modal_dialog()
 
     def on_notification_dialog_close(self, widget, data=None):
-        self.presenter.hide_notification()
+        self.presenter.destroy_modal_dialog()
 
