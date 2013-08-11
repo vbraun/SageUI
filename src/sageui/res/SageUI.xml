@@ -73,48 +73,48 @@
       </object>
     </child>
   </object>
-  <object class="GtkWindow" id="main_window">
+  <object class="GtkWindow" id="cmdline_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">SageUI</property>
-    <signal name="destroy" handler="on_main_window_destroy" swapped="no"/>
-    <signal name="delete-event" handler="on_main_window_delete_event" swapped="no"/>
-    <signal name="map" handler="on_main_window_map" after="yes" swapped="no"/>
+    <signal name="destroy" handler="on_cmdline_window_destroy" swapped="no"/>
+    <signal name="delete-event" handler="on_cmdline_window_delete_event" swapped="no"/>
+    <signal name="map" handler="on_cmdline_window_map" after="yes" swapped="no"/>
     <child>
-      <object class="GtkVBox" id="main_vbox">
+      <object class="GtkVBox" id="cmdline_vbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkMenuBar" id="main_menubar">
+          <object class="GtkMenuBar" id="cmdline_menubar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_file">
+              <object class="GtkMenuItem" id="cmdline_menubar_file">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="main_submenu_file">
+                  <object class="GtkMenu" id="cmdline_submenu_file">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_new">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_new">
                         <property name="label">gtk-new</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_new_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_new_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_open">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_open">
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_open_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_open_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -124,13 +124,13 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_quit">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_quit">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_quit_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_quit_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -138,33 +138,33 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_edit">
+              <object class="GtkMenuItem" id="cmdline_menubar_edit">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Edit</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="main_submenu_edit">
+                  <object class="GtkMenu" id="cmdline_submenu_edit">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_copy">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_copy">
                         <property name="label">gtk-copy</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_copy_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_copy_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_paste">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_paste">
                         <property name="label">gtk-paste</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_paste_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_paste_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -172,7 +172,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_view">
+              <object class="GtkMenuItem" id="cmdline_menubar_view">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_View</property>
@@ -180,31 +180,31 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_developer">
+              <object class="GtkMenuItem" id="cmdline_menubar_developer">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Developer</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="main_submenu_developer">
+                  <object class="GtkMenu" id="cmdline_submenu_developer">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="main_menu_trac">
+                      <object class="GtkMenuItem" id="cmdline_menu_trac">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Trac Browser</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_main_menu_trac_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_trac_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="main_menu_git">
+                      <object class="GtkMenuItem" id="cmdline_menu_git">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Git Repository</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_main_menu_git_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_git_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -212,7 +212,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_windows">
+              <object class="GtkMenuItem" id="cmdline_menubar_windows">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Windows</property>
@@ -220,23 +220,23 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="main_menubar_help">
+              <object class="GtkMenuItem" id="cmdline_menubar_help">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="main_submenu_help">
+                  <object class="GtkMenu" id="cmdline_submenu_help">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="main_menu_about">
+                      <object class="GtkImageMenuItem" id="cmdline_menu_about">
                         <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_main_menu_about_activate" swapped="no"/>
+                        <signal name="activate" handler="on_cmdline_menu_about_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -292,7 +292,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkStatusbar" id="main_statusbar">
+          <object class="GtkStatusbar" id="cmdline_statusbar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="spacing">2</property>

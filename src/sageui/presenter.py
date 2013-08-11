@@ -16,7 +16,7 @@ class Presenter(object):
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
         self.model = model_class(self)
-        self.show_terminal_window()
+        self.show_commandline_window()
         self.show_trac_window()
 
     def terminate(self):
@@ -27,13 +27,13 @@ class Presenter(object):
         self.view.terminate()
         
     ###################################################################
-    # The window containing the terminal
+    # The window containing the commandline terminal
 
-    def show_terminal_window(self):
-        return self.view.show_terminal_window()
+    def show_commandline_window(self):
+        return self.view.show_commandline_window()
 
-    def hide_terminal_window(self):
-        self.view.hide_terminal_window()
+    def hide_commandline_window(self):
+        self.view.hide_commandline_window()
         if not self.view.have_open_window():
             self.terminate()
 

@@ -29,17 +29,17 @@ class View(object):
         return os.path.join(self.resource_dir, 'res', 'SageUI.xml')
         
     @cached_property
-    def terminal_window(self):
-        from main_window import MainWindow
-        return MainWindow(self.presenter, self.glade_file)
+    def commandline_window(self):
+        from commandline_window import CommandlineWindow
+        return CommandlineWindow(self.presenter, self.glade_file)
 
-    def show_terminal_window(self):
-        self._open_windows.add(self.terminal_window)
-        self.terminal_window.show()
+    def show_commandline_window(self):
+        self._open_windows.add(self.commandline_window)
+        self.commandline_window.show()
 
-    def hide_terminal_window(self):
-        self.terminal_window.hide()
-        self._open_windows.remove(self.terminal_window)
+    def hide_commandline_window(self):
+        self.commandline_window.hide()
+        self._open_windows.remove(self.commandline_window)
 
     @cached_property
     def trac_window(self):

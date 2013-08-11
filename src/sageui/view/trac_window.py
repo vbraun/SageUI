@@ -91,6 +91,7 @@ class TracWindow(Buildable, Window):
         tag = gtk.TextTag('description')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
+        tag.set_property('wrap-mode', gtk.WRAP_WORD)
         tag_table.add(tag)
         tag = gtk.TextTag('trac_field')
         tag.set_property('foreground', 'black')
@@ -100,12 +101,18 @@ class TracWindow(Buildable, Window):
         tag = gtk.TextTag('comment')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
+        tag.set_property('wrap-mode', gtk.WRAP_WORD)
         tag_table.add(tag)
         tag = gtk.TextTag('title')
         tag.set_property('foreground', 'black')
         tag.set_property('weight', pango.WEIGHT_BOLD)
         tag.set_property('scale', pango.SCALE_X_LARGE)
         tag_table.add(tag)
+        tag = gtk.TextTag('debug')
+        tag.set_property('wrap-mode', gtk.WRAP_WORD)
+        tag_table.add(tag)
+        
+
 
     def show(self):
         super(TracWindow, self).show()
@@ -190,16 +197,21 @@ class TracWindow(Buildable, Window):
         trac_field_tag = tag_table.lookup('trac_field')
         description_tag = tag_table.lookup('description')
         comment_tag = tag_table.lookup('comment')
+        debug_tag = tag_table.lookup('debug')
         append('Trac #'+str(ticket.get_number())+': '+ticket.get_title(), title_tag)
         append('\n\n')
         branch = ticket.get_branch()
         if branch is not None:
-            append('Description:\n', label_tag)
+            append('Branch:  ', label_tag)
             append(branch, trac_field_tag)
+            append('\n')
         append('Description:\n', label_tag)
         append(ticket.get_description(), description_tag)
         append('\n\n')
         append('Comment:\n', label_tag)
+
+        append('\n\n')
+        append(str(ticket._data), debug_tag)
 
     def on_trac_window_delete_event(self, widget, data=None):
         self.presenter.hide_trac_window()
@@ -238,11 +250,9 @@ class TracWindow(Buildable, Window):
     def on_trac_tool_refresh_clicked(self, widget, data=None):
         self.presenter.show_notification("todo: trac refresh")
         
-    #def on_trac_tool_search_clicked(self, widget, data=None):
-    #    self.presenter.show_notification("todo: trac search")
-        
     def on_trac_search_entry_activate(self, widget, data=None):
         entry = self.search_entry.get_buffer().get_text()
+        entry = entry.strip('# ')
         try:
             ticket_number = int(entry)
             self.presenter.load_ticket(ticket_number)

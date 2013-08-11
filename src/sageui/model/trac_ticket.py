@@ -50,7 +50,8 @@ class TracTicket(object):
         return self._mtime
 
     def get_branch(self):
-        return self._data.get('branch', None)
+        branch = self._data.get('branch', '')
+        return None if len(branch) == 0 else branch
 
     def _pretty_time(self, time):
         """
