@@ -8,7 +8,7 @@ local database nor are they always up to date, of course.
 import cPickle
 import os
 
-from trac_ticket import TracTicket
+from trac_ticket import TracTicket, TracTicket_class
 
 
 
@@ -24,7 +24,7 @@ class TracDatabase(object):
             with open(filename, 'wb') as pickle:
                 cPickle.dump(self._data, pickle)
             return True
-        except (IOError, OSError, cPickle.UnpicklingError):
+        except (IOError, OSError, cPickle.UnpicklingError, TypeError):
             self._data = dict()
             return False
         
@@ -34,12 +34,12 @@ class TracDatabase(object):
             with open(filename, 'rb') as pickle:
                 self._data = cPickle.load(pickle)
             return True
-        except (IOError, OSError, cPickle.UnpicklingError):
+        except (IOError, OSError, cPickle.UnpicklingError, TypeError):
             self._data = dict()
             return False
 
     def add(self, ticket):
-        assert isinstance(ticket, TracTicket)
+        assert isinstance(ticket, TracTicket_class)
         number = ticket.get_number()
         current = self._data.get(number, None)
         if current is not None:

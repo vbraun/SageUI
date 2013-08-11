@@ -7,7 +7,7 @@ EXAMPLES::
     >>> create_time = datetime.fromtimestamp(1376149000)
     >>> modify_time = datetime.fromtimestamp(1376150000)
     >>> from sageui.model.trac_ticket import TracTicket
-    >>> t = TracTicket(123, 'ticket title', create_time, modify_time, {})
+    >>> t = TracTicket(123, create_time, modify_time, {})
     >>> t    # doctest: +ELLIPSIS
     <sageui.model.trac_ticket.TracTicket object at 0x...>
     >>> t.get_number()
@@ -24,16 +24,64 @@ EXAMPLES::
 from datetime import datetime
 
 
-class TracTicket(object):
+def TicketChange(changelog_entry):
+    time, author, change, data1, data2, data3 = changelog_entry
+    print time, author, change, data1, data2, data3
+    if change == 'comment':
+        return TicketComment_class(time, author, change, data1, data2, data3)
+    return TicketChange_class(time, author, change)
+
+
+class TicketChange_class(object):
     
-    def __init__(self, number, title, ctime, mtime, data):
+    def __init__(self, time, author, change):
+        self._time = time
+        self._author = author
+        self._change = change
+
+    def get_ctime(self):
+        return self._time
+
+    def get_author(self):
+        return self._author
+        
+    def get_change(self):
+        return self._change
+
+
+class TicketComment_class(TicketChange_class):
+
+    def __init__(self, time, author, change, data1, data2, data3):
+        TicketChange_class.__init__(self, time, author, change)
+        self._number = data1
+        self._comment = data2
+        if data3 != 1:
+            print 'TicketComment got data3 =', data3
+
+    def get_number(self):
+        return self._number
+
+    def get_comment(self):
+        return self._comment
+
+
+
+def TracTicket(data, change_log):
+    ticket_changes = [TicketChange(entry) for entry in change_log]
+    return TracTicket_class(data[0], data[1], data[2], data[3], ticket_changes)
+    
+
+
+class TracTicket_class(object):
+    
+    def __init__(self, number, ctime, mtime, data, change_log=None):
         self._number = number
-        self._title = title
         self._ctime = ctime
         self._mtime = mtime
         self._last_viewed = None
         self._download_time = None
         self._data = data
+        self._change_log = change_log
 
     def get_number(self):
         return self._number
@@ -41,7 +89,7 @@ class TracTicket(object):
     __int__ = get_number
 
     def get_title(self):
-        return self._title
+        return self._data.get('summary', '+++ no summary +++')
 
     def get_ctime(self):
         return self._ctime
@@ -52,6 +100,10 @@ class TracTicket(object):
     def get_branch(self):
         branch = self._data.get('branch', '')
         return None if len(branch) == 0 else branch
+
+    def get_dependencies(self):
+        deps = self._data.get('dependencies', '')
+        return None if len(deps) == 0 else deps
 
     def _pretty_time(self, time):
         """
@@ -117,3 +169,8 @@ class TracTicket(object):
         default = '+++ no description +++'
         return self._data.get('description', default)
 
+    def comment_iter(self):
+        for change in self._change_log:
+            if isinstance(change, TicketComment_class):
+                yield change
+        

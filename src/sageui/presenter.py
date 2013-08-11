@@ -16,7 +16,7 @@ class Presenter(object):
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
         self.model = model_class(self)
-        self.show_commandline_window()
+        #self.show_commandline_window()
         self.show_trac_window()
 
     def terminate(self):

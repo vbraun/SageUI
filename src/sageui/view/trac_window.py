@@ -111,8 +111,6 @@ class TracWindow(Buildable, Window):
         tag = gtk.TextTag('debug')
         tag.set_property('wrap-mode', gtk.WRAP_WORD)
         tag_table.add(tag)
-        
-
 
     def show(self):
         super(TracWindow, self).show()
@@ -205,11 +203,19 @@ class TracWindow(Buildable, Window):
             append('Branch:  ', label_tag)
             append(branch, trac_field_tag)
             append('\n')
+        deps = ticket.get_dependencies()
+        if deps is not None:
+            append('Dependencies:  ', label_tag)
+            append(deps, trac_field_tag)
+            append('\n')
         append('Description:\n', label_tag)
-        append(ticket.get_description(), description_tag)
-        append('\n\n')
-        append('Comment:\n', label_tag)
-
+        append(ticket.get_description().strip(), description_tag)
+        for comment in ticket.comment_iter():
+            append('\n\n')
+            author = comment.get_author()
+            time = str(comment.get_ctime())
+            append('Comment (by {0} on {1}):\n'.format(author, time), label_tag)
+            append(comment.get_comment().strip(), comment_tag)
         append('\n\n')
         append(str(ticket._data), debug_tag)
 

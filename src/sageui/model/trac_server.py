@@ -32,9 +32,9 @@ class TracServer(object):
 
     def load(self, ticket_number):
         ticket_number = int(ticket_number)
+        changelog = self.anonymous_proxy.ticket.changeLog(ticket_number)
         data = self.anonymous_proxy.ticket.get(ticket_number)
-        title = data[3].get('summary', '+++ No Summary +++')
-        ticket = TracTicket(data[0], title, data[1], data[2], data[3])
+        ticket = TracTicket(data, changelog)
         ticket.set_download_time(datetime.now())
         self.database.add(ticket)
         return ticket
