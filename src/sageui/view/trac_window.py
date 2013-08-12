@@ -266,6 +266,9 @@ class TracWindow(Buildable, Window):
     def on_trac_menu_delete_activate(self, widget, data=None):
         self.presenter.show_notification("todo: trac delete")
 
+    def on_trac_menu_preferences_activate(self, widget, data=None):
+        self.presenter.show_preferences()
+
     def on_trac_tool_new_clicked(self, widget, data=None):
         self.presenter.show_notification("todo: trac new ticket")
     

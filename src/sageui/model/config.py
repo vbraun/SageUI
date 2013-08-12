@@ -28,3 +28,6 @@ class Config(object):
             os.mkdir(path)
         return path
 
+    @property
+    def sage_root(self):
+        return 'env $SAGE_ROOT'

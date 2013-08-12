@@ -1,8 +1,5 @@
 """
-Notification Dialog
-
-This is a lame modal dialog with text and a single "OK" button. Should 
-only be used as placeholder for future functionality.
+Generic Error Dialog
 """
 
  

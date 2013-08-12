@@ -18,6 +18,7 @@ class Presenter(object):
         self.model = model_class(self)
         #self.show_commandline_window()
         self.show_trac_window()
+        self.view.new_preferences_dialog(self.model.config).show()
 
     def terminate(self):
         """
@@ -91,6 +92,12 @@ class Presenter(object):
 
     def show_error(self, title, text):
         self.view.new_error_dialog(title, text).show()
+
+    ###################################################################
+    # Preferences dialog (modal)
+
+    def show_preferences(self):
+        self.view.new_preferences_dialog(self.model.config).show()
 
     ###################################################################
     # open with external program

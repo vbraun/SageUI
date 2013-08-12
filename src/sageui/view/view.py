@@ -75,6 +75,13 @@ class View(object):
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
+        
+    def new_preferences_dialog(self, config):
+        from preferences_dialog import PreferencesDialog
+        dlg = PreferencesDialog(self.presenter, self.glade_file, config)
+        assert self._modal_dialog is None
+        self._modal_dialog = dlg
+        return dlg
 
     def destroy_modal_dialog(self):
         assert self._modal_dialog is not None

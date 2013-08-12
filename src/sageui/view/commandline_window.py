@@ -50,6 +50,9 @@ class CommandlineWindow(Buildable, Window):
     def on_cmdline_menu_paste_activate(self, widget, data=None):
         self.presenter.show_notification("todo: paste")
         
+    def on_cmdline_menu_preferences_activate(self, widget, data=None):
+        self.presenter.show_preferences()
+        
     def on_cmdline_menu_trac_activate(self, widget, data=None):
         self.presenter.show_trac_window()
         
