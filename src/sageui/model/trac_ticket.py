@@ -23,10 +23,18 @@ EXAMPLES::
 
 from datetime import datetime
 
+def make_time(time):
+    """
+    Convert xmlrpc DateTime objects to datetime.datetime
+    """
+    return datetime.strptime(time.value, "%Y%m%dT%H:%M:%S")
+
+
+
 
 def TicketChange(changelog_entry):
     time, author, change, data1, data2, data3 = changelog_entry
-    print time, author, change, data1, data2, data3
+    # print time, author, change, data1, data2, data3
     if change == 'comment':
         return TicketComment_class(time, author, change, data1, data2, data3)
     return TicketChange_class(time, author, change)
@@ -35,7 +43,7 @@ def TicketChange(changelog_entry):
 class TicketChange_class(object):
     
     def __init__(self, time, author, change):
-        self._time = time
+        self._time = make_time(time)
         self._author = author
         self._change = change
 
@@ -66,18 +74,22 @@ class TicketComment_class(TicketChange_class):
 
 
 
-def TracTicket(data, change_log):
+def TracTicket(ticket_number, server_proxy):
+    ticket_number = int(ticket_number)
+    change_log = server_proxy.ticket.changeLog(ticket_number)
+    data = server_proxy.ticket.get(ticket_number)
     ticket_changes = [TicketChange(entry) for entry in change_log]
-    return TracTicket_class(data[0], data[1], data[2], data[3], ticket_changes)
-    
+    ticket = TracTicket_class(data[0], data[1], data[2], data[3], ticket_changes)
+    ticket.set_download_time(datetime.now())
+    return ticket
 
 
 class TracTicket_class(object):
     
     def __init__(self, number, ctime, mtime, data, change_log=None):
         self._number = number
-        self._ctime = ctime
-        self._mtime = mtime
+        self._ctime = make_time(ctime)
+        self._mtime = make_time(mtime)
         self._last_viewed = None
         self._download_time = None
         self._data = data

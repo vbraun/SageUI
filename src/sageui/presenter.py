@@ -51,7 +51,7 @@ class Presenter(object):
 
     def show_trac_window(self):
         current_ticket = self.model.trac.get_current_ticket()
-        ticket_list = self.model.trac.database.recent_tickets()
+        ticket_list = self.model.trac.get_ticket_list()
         self.view.trac_window.set_ticket_list(ticket_list, current_ticket)
         self.view.show_trac_window()
     
@@ -73,7 +73,7 @@ class Presenter(object):
             return self.show_error('Cannot download ticket', str(msg))
         self.model.trac.set_current_ticket(ticket_number)
         loaded_ticket = self.model.trac.get_current_ticket()
-        ticket_list = self.model.trac.database.recent_tickets()
+        ticket_list = self.model.trac.get_ticket_list()
         self.view.trac_window.set_ticket_list(ticket_list, loaded_ticket)
         self.view.trac_window.display_ticket(loaded_ticket)
 
@@ -91,4 +91,10 @@ class Presenter(object):
 
     def show_error(self, title, text):
         self.view.new_error_dialog(title, text).show()
+
+    ###################################################################
+    # open with external program
+
+    def xdg_open(self, file_or_uri):
+        self.view.xdg_open(file_or_uri)
 

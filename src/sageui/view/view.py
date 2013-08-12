@@ -80,3 +80,7 @@ class View(object):
         assert self._modal_dialog is not None
         self._modal_dialog.window.destroy()
         self._modal_dialog = None
+        
+    def xdg_open(self, file_or_uri):
+        from xdg_open import xdg_open
+        xdg_open(file_or_uri, self.presenter)

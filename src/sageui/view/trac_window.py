@@ -33,6 +33,8 @@ class TracWindow(Buildable, Window):
     def __init__(self, presenter, glade_file):
         self.presenter = presenter
         Buildable.__init__(self, ['trac_window', 'trac_menubar', 'trac_toolbar',
+                                  'trac_tool_web', 'trac_tool_git', 'trac_tool_refresh',
+                                  'trac_tool_git_icon',
                                   'trac_ticketlist_store', 'trac_ticketlist_view',
                                   'trac_search_entry',
                                   'trac_comments',
@@ -49,6 +51,9 @@ class TracWindow(Buildable, Window):
         self._init_comments(self.comments)
         self.comment_text = builder.get_object('trac_comment_text')
         self.comment_buffer = builder.get_object('trac_comment_buffer')
+        self.toolbar_web = builder.get_object('trac_tool_web')
+        self.toolbar_refresh = builder.get_object('trac_tool_refresh')
+        self.toolbar_git = builder.get_object('trac_tool_git')
         builder.connect_signals(self)
         self.ticket_list = None
         self.current_ticket = None
@@ -146,6 +151,9 @@ class TracWindow(Buildable, Window):
         sel = self.ticketlist_view.get_selection()
         if ticket is None:
             sel.unselect_all()
+            self.toolbar_refresh.set_sensitive(False)
+            self.toolbar_web.set_sensitive(False)
+            self.toolbar_git.set_sensitive(False)
             return
         assert ticket in self.ticket_list
         ticket_number = ticket.get_number()
@@ -155,6 +163,9 @@ class TracWindow(Buildable, Window):
             iter = store.iter_next(iter)
         assert iter != None
         sel.select_iter(iter)
+        self.toolbar_refresh.set_sensitive(True)
+        self.toolbar_web.set_sensitive(True)
+        self.toolbar_git.set_sensitive(ticket.get_branch() is not None)
         self.update_ticket_age([ticket])
 
     def update_ticket_age(self, tickets=None):
@@ -213,9 +224,14 @@ class TracWindow(Buildable, Window):
         for comment in ticket.comment_iter():
             append('\n\n')
             author = comment.get_author()
-            time = str(comment.get_ctime())
+            time = comment.get_ctime().ctime()
             append('Comment (by {0} on {1}):\n'.format(author, time), label_tag)
             append(comment.get_comment().strip(), comment_tag)
+        append('\n\n')
+        append('Created:  ', label_tag)
+        append(ticket.get_ctime().ctime(), trac_field_tag)
+        append('\t  Last modified:  ', label_tag)
+        append(ticket.get_mtime().ctime(), trac_field_tag)
         append('\n\n')
         append(str(ticket._data), debug_tag)
 
@@ -252,10 +268,17 @@ class TracWindow(Buildable, Window):
 
     def on_trac_tool_new_clicked(self, widget, data=None):
         self.presenter.show_notification("todo: trac new ticket")
-        
+    
+    def on_trac_tool_web_clicked(self, widget, data=None):
+        url = 'http://trac.sagemath.org/{0}'.format(self.current_ticket.get_number())
+        self.presenter.xdg_open(url)
+
+    def on_trac_tool_git_clicked(self, widget, data=None):
+        self.presenter.show_notification("todo: git checkout")
+
     def on_trac_tool_refresh_clicked(self, widget, data=None):
-        self.presenter.show_notification("todo: trac refresh")
-        
+        self.presenter.load_ticket(self.current_ticket)
+
     def on_trac_search_entry_activate(self, widget, data=None):
         entry = self.search_entry.get_buffer().get_text()
         entry = entry.strip('# ')

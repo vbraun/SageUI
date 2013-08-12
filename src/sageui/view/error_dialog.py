@@ -17,8 +17,8 @@ class ErrorDialog(Buildable, Window):
         Buildable.__init__(self, ['error_dialog'])
         builder = self.get_builder(glade_file)
         Window.__init__(self, builder, 'error_dialog')
-        self.window.set_markup(title)
-        self.window.format_secondary_text(text)
+        self.window.set_property('text', title)
+        self.window.set_property('secondary_text', text)
         builder.connect_signals(self)
 
     def on_error_dialog_response(self, widget, data=None):

@@ -53,5 +53,5 @@ class TracDatabase(object):
         lst = [(ticket.get_last_viewed_time(), ticket) 
                for ticket in self._data.values()]
         lst.sort(reverse=True)
-        return tuple(ticket for time, ticket in lst[:50])
+        return [ticket for time, ticket in lst[:50]]
 

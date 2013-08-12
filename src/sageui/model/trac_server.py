@@ -32,10 +32,8 @@ class TracServer(object):
 
     def load(self, ticket_number):
         ticket_number = int(ticket_number)
-        changelog = self.anonymous_proxy.ticket.changeLog(ticket_number)
-        data = self.anonymous_proxy.ticket.get(ticket_number)
-        ticket = TracTicket(data, changelog)
-        ticket.set_download_time(datetime.now())
+        ticket = TracTicket(ticket_number, self.anonymous_proxy)
+
         self.database.add(ticket)
         return ticket
 
@@ -68,3 +66,23 @@ class TracServer(object):
             return self.get(curr)
         except KeyError:
             return self.load(curr)
+        
+    def get_ticket_list(self, limit=50):
+        """
+        Get a list of relevant tickets.
+
+        OUTPUT:
+
+        A list of tickets, including the current ticket.
+        """
+        curr = self.get_current_ticket()
+        tickets = self.database.recent_tickets(limit=limit)
+        if (curr is not None) and (curr not in tickets):
+            tickets.append(curr)
+        tickets = [(ticket.get_last_viewed_time(), ticket) 
+                   for ticket in tickets]
+        tickets.sort(reverse=True)
+        return [ticket for time, ticket in tickets]
+
+        
+        
