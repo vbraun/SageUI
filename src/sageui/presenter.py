@@ -16,9 +16,11 @@ class Presenter(object):
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
         self.model = model_class(self)
-        #self.show_commandline_window()
-        self.show_trac_window()
-        self.view.new_preferences_dialog(self.model.config).show()
+        if self.model.config.sage_root is None:
+            self.show_setup_assistant(None, self.setup_assistant_first_run_finished)
+        else:
+            self.show_commandline_window(self.model.config.sage_root, 'sage')
+            #self.show_trac_window()
 
     def terminate(self):
         """
@@ -30,11 +32,36 @@ class Presenter(object):
     ###################################################################
     # The window containing the commandline terminal
 
-    def show_commandline_window(self):
-        return self.view.show_commandline_window()
+    def show_commandline_window(self, path, command):
+        return self.view.show_commandline_window(path, command)
 
     def hide_commandline_window(self):
         self.view.hide_commandline_window()
+        if not self.view.have_open_window():
+            self.terminate()
+
+    ###################################################################
+    # The git window
+
+    def show_git_window(self):
+        return self.view.show_git_window()
+
+    def hide_git_window(self):
+        self.view.hide_git_window()
+        if not self.view.have_open_window():
+            self.terminate()
+
+    ###################################################################
+    # Preferences dialog
+
+    def show_preferences_dialog(self):
+        self.view.show_preferences_dialog(self.model.config)
+        
+    def apply_preferences_dialog(self):
+        self.view.apply_preferences_dialog(self.model.config)
+
+    def hide_preferences_dialog(self):
+        self.view.hide_preferences_dialog()
         if not self.view.have_open_window():
             self.terminate()
 
@@ -86,6 +113,8 @@ class Presenter(object):
 
     def destroy_modal_dialog(self):
         self.view.destroy_modal_dialog()
+        if not self.view.have_open_window():
+            self.terminate()
  
     ###################################################################
     # Error dialog (modal)
@@ -94,14 +123,52 @@ class Presenter(object):
         self.view.new_error_dialog(title, text).show()
 
     ###################################################################
-    # Preferences dialog (modal)
+    # Setup assistant (modal)
 
-    def show_preferences(self):
-        self.view.new_preferences_dialog(self.model.config).show()
+    def sage_installation(self, sage_root):
+        """
+        Return data about the Sage installation at ``sage_root``
+    
+        INPUT:
+
+        - ``sage_root`` -- a directory name or ``None`` (default). The 
+          path will be searched if not specified.
+        """
+        return self.model.sage_installation(sage_root)
+
+    def show_setup_assistant(self, sage_root, callback):
+        """
+        Assistant to figure out SAGE_ROOT
+        
+        INPUT:
+
+        - ``sage_root`` -- string or ``None``. The initial value for 
+          ``SAGE_ROOT``. If ``None``: Will be figured out from 
+          calling ``sage`` in the ``$PATH``.
+    
+        - ``callback`` -- function / method. Will be called back with 
+          the new :class:`sageui.model.sage_installation.SageInstallation`
+        """
+        self.view.new_setup_assistant(sage_root, callback).show()
+
+    def setup_assistant_first_run_finished(self, sage_install):
+        """
+        The callback for the first run
+        """
+        self.model.config.sage_root = sage_install.sage_root
+        self.model.config.sage_version = sage_install.version
+        if not self.view.have_open_window():
+            self.show_commandline_window(self.model.config.sage_root, 'sage')
 
     ###################################################################
     # open with external program
 
     def xdg_open(self, file_or_uri):
         self.view.xdg_open(file_or_uri)
+
+    ###################################################################
+    # Handle configuration change
+
+    def config_sage_changed(self):
+        self.view.config_sage_changed(self.model.config)
 

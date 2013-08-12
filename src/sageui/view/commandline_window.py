@@ -1,5 +1,5 @@
 
-
+import os
 import gtk
 from gtksourceview2 import View as GtkSourceView
 
@@ -21,6 +21,11 @@ class CommandlineWindow(Buildable, Window):
         self.terminal = builder.get_object('terminal')
         self.terminal_adjustment = builder.get_object('terminal_adjustment')
         builder.connect_signals(self)
+        
+    def run(self, path, command):
+        exe = os.path.join(path, command)
+        self.terminal.reset(full=True, clear_history=False)
+        self.terminal.fork_command(exe)
 
     def on_cmdline_window_delete_event(self, widget, data=None):
         self.presenter.hide_commandline_window()
@@ -51,11 +56,11 @@ class CommandlineWindow(Buildable, Window):
         self.presenter.show_notification("todo: paste")
         
     def on_cmdline_menu_preferences_activate(self, widget, data=None):
-        self.presenter.show_preferences()
+        self.presenter.show_preferences_dialog()
         
     def on_cmdline_menu_trac_activate(self, widget, data=None):
         self.presenter.show_trac_window()
         
     def on_cmdline_menu_git_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: git browser")
+        self.presenter.show_git_window()
 

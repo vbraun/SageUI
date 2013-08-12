@@ -21,5 +21,9 @@ class Model:
     def terminate(self):
         self.trac.database.save(self.config.sageui_directory)
 
-    
+
+    def sage_installation(self, sage_root):
+        from sage_installation import SageInstallation
+        return SageInstallation(sage_root)
+
         

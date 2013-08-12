@@ -28,18 +28,32 @@ class View(object):
     def glade_file(self):
         return os.path.join(self.resource_dir, 'res', 'SageUI.xml')
         
+    def terminate(self):
+        gtk.main_quit()
+
+    def xdg_open(self, file_or_uri):
+        from xdg_open import xdg_open
+        xdg_open(file_or_uri, self.presenter)
+
+    ##################################################################
+    # The commandline window
+
     @cached_property
     def commandline_window(self):
         from commandline_window import CommandlineWindow
         return CommandlineWindow(self.presenter, self.glade_file)
 
-    def show_commandline_window(self):
+    def show_commandline_window(self, path, command):
         self._open_windows.add(self.commandline_window)
+        self.commandline_window.run(path, command)
         self.commandline_window.show()
 
     def hide_commandline_window(self):
         self.commandline_window.hide()
         self._open_windows.remove(self.commandline_window)
+
+    ###################################################################
+    # The trac window
 
     @cached_property
     def trac_window(self):
@@ -54,13 +68,60 @@ class View(object):
         self.trac_window.hide()
         self._open_windows.remove(self.trac_window)
 
+    ###################################################################
+    # The git window
+
+    @cached_property
+    def git_window(self):
+        from git_window import GitWindow
+        return GitWindow(self.presenter, self.glade_file)
+        
+    def show_git_window(self):
+        self._open_windows.add(self.git_window)
+        self.git_window.show()
+
+    def hide_git_window(self):
+        self.git_window.hide()
+        self._open_windows.remove(self.git_window)
+
+    ###################################################################
+    # The about dialog
+
     @cached_property
     def about_dialog(self):
         from about_dialog import AboutDialog
         return AboutDialog(self.presenter, self.glade_file)
 
-    def terminate(self):
-        gtk.main_quit()
+    def show_about_dialog(self):
+        self._open_windows.add(self.about_dialog)
+        self.about_dialog.show()
+
+    def hide_about_dialog(self):
+        self.about_dialog.hide()
+        self._open_windows.remove(self.about_dialog)
+
+    ###################################################################
+    # The preferences dialog
+
+    @cached_property
+    def preferences_dialog(self):
+        from preferences_dialog import PreferencesDialog
+        return PreferencesDialog(self.presenter, self.glade_file)
+
+    def show_preferences_dialog(self, config):
+        self._open_windows.add(self.preferences_dialog)
+        self.preferences_dialog.update(config)
+        self.preferences_dialog.show()
+
+    def hide_preferences_dialog(self):
+        self.preferences_dialog.hide()
+        self._open_windows.remove(self.preferences_dialog)
+
+    def apply_preferences_dialog(self, config):
+        self.preferences_dialog.apply(config)
+
+    ###################################################################
+    # Modal dialogs
 
     def new_notification_dialog(self, text):
         from notification_dialog import NotificationDialog
@@ -76,9 +137,9 @@ class View(object):
         self._modal_dialog = dlg
         return dlg
         
-    def new_preferences_dialog(self, config):
-        from preferences_dialog import PreferencesDialog
-        dlg = PreferencesDialog(self.presenter, self.glade_file, config)
+    def new_setup_assistant(self, sage_root, callback):
+        from setup_assistant import SetupAssistant
+        dlg = SetupAssistant(self.presenter, self.glade_file, sage_root, callback)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
@@ -88,6 +149,9 @@ class View(object):
         self._modal_dialog.window.destroy()
         self._modal_dialog = None
         
-    def xdg_open(self, file_or_uri):
-        from xdg_open import xdg_open
-        xdg_open(file_or_uri, self.presenter)
+    ###################################################################
+    # Handle configuration change
+
+    def config_sage_changed(self, config):
+        self.preferences_dialog.update(config)
+        self.commandline_window.run(config.sage_root, 'sage')

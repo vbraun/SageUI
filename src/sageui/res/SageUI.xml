@@ -326,6 +326,390 @@
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="git_base_store">
+    <columns>
+      <!-- column-name commit -->
+      <column type="gchararray"/>
+      <!-- column-name summary -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">d40932d2fda2249a16b69d6457e2689a3e5d3e2d</col>
+        <col id="1" translatable="yes">HEAD</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">540e9b7e2f8622ad8c19eeffd8d2eaa757fab3c6</col>
+        <col id="1" translatable="yes">previous commit message</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="git_branch_store">
+    <columns>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="git_files_store">
+    <columns>
+      <!-- column-name icon -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name filename -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkWindow" id="git_window">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Sage Git Repository</property>
+    <property name="icon">icons/git.svg</property>
+    <signal name="delete-event" handler="on_git_window_delete_event" swapped="no"/>
+    <child>
+      <object class="GtkVBox" id="vbox3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkMenuBar" id="git_menubar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="menuitem2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_File</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem1">
+                        <property name="label">gtk-new</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem2">
+                        <property name="label">gtk-open</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem3">
+                        <property name="label">gtk-save</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem4">
+                        <property name="label">gtk-save-as</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="separatormenuitem4">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem5">
+                        <property name="label">gtk-quit</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitem3">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_Edit</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem6">
+                        <property name="label">gtk-cut</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem7">
+                        <property name="label">gtk-copy</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem8">
+                        <property name="label">gtk-paste</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem9">
+                        <property name="label">gtk-delete</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitem4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_View</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitem5">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_Help</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu3">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem10">
+                        <property name="label">gtk-about</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToolbar" id="git_toolbar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkToolButton" id="git_tool_remote">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Get remote branch</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+                <property name="icon_name">network-server</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="git_tool_refresh">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Refresh branch</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-refresh</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolItem" id="git_tool_branch">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Current branch</property>
+                <child>
+                  <object class="GtkHBox" id="hbox7">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkLabel" id="git_branch_label">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xpad">5</property>
+                        <property name="label" translatable="yes">Branch:</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="git_branch_entry">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="model">git_branch_store</property>
+                        <property name="has_entry">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolItem" id="git_tool_ticket">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Trac ticket number</property>
+                <child>
+                  <object class="GtkLabel" id="git_ticket_label">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Trac ticket number</property>
+                    <property name="xpad">5</property>
+                    <property name="label" translatable="yes">Ticket #nnnn</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHPaned" id="hpaned1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <object class="GtkVBox" id="vbox4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkLabel" id="git_changes_label">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xpad">10</property>
+                    <property name="label" translatable="yes">Changed files</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkTreeView" id="git_files_view">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">git_files_store</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkComboBox" id="git_base_view">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="model">git_base_store</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">False</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkTextView" id="git_diff">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStatusbar" id="git_statusbar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="spacing">2</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
   <object class="GtkDialog" id="notification_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -389,7 +773,6 @@
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Preferences</property>
-    <property name="modal">True</property>
     <property name="icon">icons/sage.svg</property>
     <property name="type_hint">dialog</property>
     <signal name="close" handler="on_prefs_dialog_close" swapped="no"/>
@@ -674,38 +1057,163 @@
     <property name="title" translatable="yes">Setup SageUI</property>
     <property name="modal">True</property>
     <property name="icon">icons/sage.svg</property>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
+    <signal name="close" handler="on_setup_assistant_close" swapped="no"/>
+    <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
+    <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
+    <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
     <child>
       <object class="GtkLabel" id="setup_intro">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Introduction page</property>
+        <property name="xpad">20</property>
+        <property name="ypad">20</property>
+        <property name="label" translatable="yes">This assistant will help you to set up the location of the Sage installation to use.</property>
+        <property name="wrap">True</property>
       </object>
       <packing>
         <property name="page_type">intro</property>
+        <property name="title" translatable="yes">Setup SageUI</property>
+        <property name="complete">True</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="setup_content">
+      <object class="GtkVBox" id="setup_content">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Content page</property>
+        <property name="border_width">20</property>
+        <child>
+          <object class="GtkHBox" id="hbox6">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Directory containing Sage:</property>
+                <attributes>
+                  <attribute name="style" value="italic"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hbox8">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkAlignment" id="alignment4">
+                <property name="width_request">10</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="setup_sage_root">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">●</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xpad">5</property>
+                <property name="label" translatable="yes">/ sage</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="pack_type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
       </object>
+      <packing>
+        <property name="title" translatable="yes">Sage directory</property>
+        <property name="complete">True</property>
+      </packing>
     </child>
     <child>
       <object class="GtkLabel" id="setup_confirmation">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="xpad">20</property>
+        <property name="ypad">20</property>
         <property name="label" translatable="yes">Confirmation page</property>
       </object>
       <packing>
         <property name="page_type">confirm</property>
+        <property name="title" translatable="yes">Confirmation</property>
       </packing>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkAdjustment" id="terminal_adjustment">

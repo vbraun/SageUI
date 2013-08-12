@@ -240,7 +240,7 @@ class TracWindow(Buildable, Window):
         return True
      
     def on_trac_menu_close_activate(self, widget, data=None):
-         self.presenter.hide_trac()
+         self.presenter.hide_trac_window()
 
     def on_trac_window_map(self, widget, data=None):
         print 'trac window map'
@@ -267,7 +267,7 @@ class TracWindow(Buildable, Window):
         self.presenter.show_notification("todo: trac delete")
 
     def on_trac_menu_preferences_activate(self, widget, data=None):
-        self.presenter.show_preferences()
+        self.presenter.show_preferences_dialog()
 
     def on_trac_tool_new_clicked(self, widget, data=None):
         self.presenter.show_notification("todo: trac new ticket")
