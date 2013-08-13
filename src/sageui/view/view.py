@@ -1,5 +1,16 @@
 """
 The View
+
+Holds a number of persistent windows/dialogs as well as modal 
+dialogs. They are treated slighty differently:
+
+* An ordinary window is only constructed once when it is 
+  required. When the user closes it, it is only hidden and ready
+  to be shown again as needed.
+
+* Modal dialogs are continuously re-constructed. There can only 
+  be one modal dialog at any one time. When the user closes it,
+  it must call :meth:`View.destroy_modal_dialog`.
 """
 
 import os
@@ -16,6 +27,11 @@ class View(object):
         self.presenter = presenter
         self._modal_dialog = None
         self._open_windows = set()
+        self.commandline_window_constructed = False
+        self.trac_window_constructed = False
+        self.git_window_constructed = False
+        self.about_dialog_constructed = False
+        self.preferences_window_constructed = False
         
     def have_open_window(self):
         return len(self._open_windows) != 0
@@ -40,6 +56,7 @@ class View(object):
 
     @cached_property
     def commandline_window(self):
+        self.commandline_window_constructed = True
         from commandline_window import CommandlineWindow
         return CommandlineWindow(self.presenter, self.glade_file)
 
@@ -57,6 +74,7 @@ class View(object):
 
     @cached_property
     def trac_window(self):
+        self.trac_window_constructed = True
         from trac_window import TracWindow
         return TracWindow(self.presenter, self.glade_file)
         
@@ -73,22 +91,29 @@ class View(object):
 
     @cached_property
     def git_window(self):
+        self.git_window_constructed = True
         from git_window import GitWindow
         return GitWindow(self.presenter, self.glade_file)
         
-    def show_git_window(self):
+    def show_git_window(self, repo_path):
         self._open_windows.add(self.git_window)
+        self.git_window.set_repo(repo_path)
         self.git_window.show()
 
     def hide_git_window(self):
         self.git_window.hide()
         self._open_windows.remove(self.git_window)
 
+    def set_git_branch(self, git_branch):
+        self.git_window.set_branch(git_branch)
+        self.git_window.set_bases(None)
+
     ###################################################################
     # The about dialog
 
     @cached_property
     def about_dialog(self):
+        self.about_dialog_constructed = True
         from about_dialog import AboutDialog
         return AboutDialog(self.presenter, self.glade_file)
 
@@ -105,6 +130,7 @@ class View(object):
 
     @cached_property
     def preferences_dialog(self):
+        self.preferences_window_constructed = True
         from preferences_dialog import PreferencesDialog
         return PreferencesDialog(self.presenter, self.glade_file)
 
@@ -153,5 +179,9 @@ class View(object):
     # Handle configuration change
 
     def config_sage_changed(self, config):
-        self.preferences_dialog.update(config)
-        self.commandline_window.run(config.sage_root, 'sage')
+        if self.preferences_dialog_constructed:
+            self.preferences_dialog.update(config)
+        if self.commandline_window_constructed:
+            self.commandline_window.run(config.sage_root, 'sage')
+        if self.git_window_constructed:
+            self.git_window.set_repo(config.sage_root)

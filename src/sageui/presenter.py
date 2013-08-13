@@ -19,7 +19,9 @@ class Presenter(object):
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, self.setup_assistant_first_run_finished)
         else:
-            self.show_commandline_window(self.model.config.sage_root, 'sage')
+            self.checkout_branch('u/user/description', 12345)
+            self.show_git_window()
+            #self.show_commandline_window()
             #self.show_trac_window()
 
     def terminate(self):
@@ -32,8 +34,8 @@ class Presenter(object):
     ###################################################################
     # The window containing the commandline terminal
 
-    def show_commandline_window(self, path, command):
-        return self.view.show_commandline_window(path, command)
+    def show_commandline_window(self):
+        return self.view.show_commandline_window(self.model.config.sage_root, 'sage')
 
     def hide_commandline_window(self):
         self.view.hide_commandline_window()
@@ -44,12 +46,16 @@ class Presenter(object):
     # The git window
 
     def show_git_window(self):
-        return self.view.show_git_window()
+        return self.view.show_git_window(self.model.config.sage_root)
 
     def hide_git_window(self):
         self.view.hide_git_window()
         if not self.view.have_open_window():
             self.terminate()
+
+    def checkout_branch(self, branch_name, ticket_number=None):
+        branch = self.model.git.checkout_branch(branch_name, ticket_number)
+        self.view.set_git_branch(branch)
 
     ###################################################################
     # Preferences dialog
@@ -78,9 +84,12 @@ class Presenter(object):
     # The window containing the Sage trac tickets
 
     def show_trac_window(self):
-        current_ticket = self.model.trac.get_current_ticket()
-        ticket_list = self.model.trac.get_ticket_list()
-        self.view.trac_window.set_ticket_list(ticket_list, current_ticket)
+        if not self.view.trac_window_constructed:
+            current_ticket = self.model.trac.get_current_ticket()
+            ticket_list = self.model.trac.get_ticket_list()
+            self.view.trac_window.set_ticket_list(ticket_list, current_ticket)
+            if current_ticket is not None:
+                self.view.trac_window.display_ticket(current_ticket)
         self.view.show_trac_window()
     
     def hide_trac_window(self):
@@ -94,11 +103,12 @@ class Presenter(object):
         self.view.trac_window.set_current_ticket(ticket)
         self.view.trac_window.display_ticket(ticket)
     
-    def load_ticket(self, ticket_number):
-        try:
-            self.model.trac.load(ticket_number) 
-        except TracError as msg:
-            return self.show_error('Cannot download ticket', str(msg))
+    def load_ticket(self, ticket_number, use_cache=False):
+        if not (use_cache and self.model.trac.is_cached(ticket_number)):
+            try:
+                self.model.trac.load(ticket_number) 
+            except TracError as msg:
+                return self.show_error('Cannot download ticket', str(msg))
         self.model.trac.set_current_ticket(ticket_number)
         loaded_ticket = self.model.trac.get_current_ticket()
         ticket_list = self.model.trac.get_ticket_list()
@@ -158,7 +168,7 @@ class Presenter(object):
         self.model.config.sage_root = sage_install.sage_root
         self.model.config.sage_version = sage_install.version
         if not self.view.have_open_window():
-            self.show_commandline_window(self.model.config.sage_root, 'sage')
+            self.show_commandline_window()
 
     ###################################################################
     # open with external program
@@ -170,5 +180,6 @@ class Presenter(object):
     # Handle configuration change
 
     def config_sage_changed(self):
+        self.model.sage_changed()
         self.view.config_sage_changed(self.model.config)
-
+        

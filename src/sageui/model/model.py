@@ -4,6 +4,7 @@ The Data Model and Backend
 
 from config import Config
 from trac_server import TracServer
+from git_repository import GitRepository
 
 
 class Model:
@@ -15,15 +16,19 @@ class Model:
         self.trac = TracServer(c.trac_server_hostname,
                                c.trac_server_anonymous_xmlrpc)
         self.trac.database.load(c.sageui_directory)
-
+        self.git = GitRepository(c.sage_root)
     
 
     def terminate(self):
         self.trac.database.save(self.config.sageui_directory)
 
-
     def sage_installation(self, sage_root):
         from sage_installation import SageInstallation
         return SageInstallation(sage_root)
 
-        
+
+    ###################################################################
+    # Handle configuration change
+
+    def config_sage_changed(self):
+        self.git = GitRepository(self.config.sage_root)

@@ -277,8 +277,12 @@ class TracWindow(Buildable, Window):
         self.presenter.xdg_open(url)
 
     def on_trac_tool_git_clicked(self, widget, data=None):
-        self.presenter.show_notification("todo: git checkout")
-
+        branch = self.current_ticket.get_branch()
+        assert branch is not None  # button should have been disabled
+        number = self.current_ticket.get_number()
+        self.presenter.checkout_branch(branch, number)
+        self.presenter.show_git_window()
+        
     def on_trac_tool_refresh_clicked(self, widget, data=None):
         self.presenter.load_ticket(self.current_ticket)
 

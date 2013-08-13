@@ -30,6 +30,14 @@ class TracServer(object):
         from xmlrpclib import ServerProxy
         return ServerProxy(url, transport=transport)
 
+    def is_cached(self, ticket_number):
+        ticket_number = int(ticket_number)
+        try:
+            self.get(ticket_number)
+            return True
+        except KeyError:
+            return False
+
     def load(self, ticket_number):
         ticket_number = int(ticket_number)
         ticket = TracTicket(ticket_number, self.anonymous_proxy)
