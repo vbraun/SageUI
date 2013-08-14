@@ -54,7 +54,7 @@ class Presenter(object):
             self.terminate()
 
     def checkout_branch(self, branch_name, ticket_number=None):
-        branch = self.model.git.checkout_branch(branch_name, ticket_number)
+        branch = self.model.checkout_branch(branch_name, ticket_number)
         self.view.set_git_branch(branch)
 
     ###################################################################

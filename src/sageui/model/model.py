@@ -16,7 +16,7 @@ class Model:
         self.trac = TracServer(c.trac_server_hostname,
                                c.trac_server_anonymous_xmlrpc)
         self.trac.database.load(c.sageui_directory)
-        self.git = GitRepository(c.sage_root)
+        self.repo = GitRepository(c.sage_root)
     
 
     def terminate(self):
@@ -26,9 +26,12 @@ class Model:
         from sage_installation import SageInstallation
         return SageInstallation(sage_root)
 
+    def checkout_branch(self, branch_name, ticket_number=None):
+        self.repo.checkout_branch(branch_name, ticket_number)
+
 
     ###################################################################
     # Handle configuration change
 
     def config_sage_changed(self):
-        self.git = GitRepository(self.config.sage_root)
+        self.repo = GitRepository(self.config.sage_root)

@@ -6,3 +6,5 @@ class GitError(Exception):
 class DetachedHeadError(GitError):
     pass
 
+class UserEmailException(GitError):
+    pass

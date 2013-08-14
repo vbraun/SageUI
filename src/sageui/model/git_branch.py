@@ -1,11 +1,18 @@
 """
 Branches in the Local Git Repository
 
+In fact, a particular commit on a branch.
+
 EXAMPLES::
 
-    >>> git.list_branches()
-    
+    >>> repo.local_branches()
+    [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
+
+
 """
+
+
+    
 
 
 class GitBranchABC(object):
@@ -13,9 +20,10 @@ class GitBranchABC(object):
     Base class for git branches
     """
 
-    def __init__(self, repository, branch_name):
+    def __init__(self, repository, branch_name, commit):
         self.repository = repository
         self.name = branch_name
+        self.commit = commit
 
     @property 
     def ticket_string(self):
@@ -24,10 +32,6 @@ class GitBranchABC(object):
     @property
     def full_branch_name(self):
         return self.name
-
-    @property
-    def commit(self):
-        return '72f6b86f1afc47b6a94ee5aa621839ec390fdc3c'
 
     def __repr__(self):
         return 'Git branch '+self.full_branch_name
@@ -41,8 +45,8 @@ class GitLocalBranch(GitBranchABC):
     not start with ``sageui/``.
     """
     
-    def __init__(self, repository, branch_name):
-        GitBranchABC.__init__(self, repository, branch_name)
+    def __init__(self, repository, branch_name, commit):
+        GitBranchABC.__init__(self, repository, branch_name, commit)
 
     @property 
     def ticket_string(self):
@@ -54,8 +58,8 @@ class GitManagedBranch(GitBranchABC):
     A branch that SageUI created for its own private use
     """
     
-    def __init__(self, repository, branch_name, ticket_number):
-        GitBranchABC.__init__(self, repository, branch_name)
+    def __init__(self, repository, branch_name, commit, ticket_number):
+        GitBranchABC.__init__(self, repository, branch_name, commit)
         self.ticket_number = ticket_number
 
     @property 

@@ -1,12 +1,31 @@
 r"""
 Git Interface
 
-This module provides a python interface to Sage's git repository.
+This module provides a python interface to git. Essentially, it is
+a raw wrapper around calls to git and retuns the output as strings.
 
-AUTHORS:
+EXAMPLES::
 
-- TODO: add authors from github's history and trac's history
+    >>> git._check_user_email()
+    DEBUG cmd: git config user.name
+    DEBUG cmd: git config user.email
 
+    >>> git.execute('status', porcelain=True)
+    DEBUG cmd: git status --porcelain
+    DEBUG stdout: ?? untracked
+    '?? untracked\n'
+
+    >>> git.status(porcelain=True)
+    DEBUG cmd: git status --porcelain
+    DEBUG stdout: ?? untracked
+    '?? untracked\n'
+
+    >>> git.untracked_files()
+    DEBUG cmd: git ls-files --exclude-standard --other
+    DEBUG stdout: untracked
+    ['untracked']
+
+   
 """
 #*****************************************************************************
 #       Copyright (C) 2013 TODO
@@ -18,16 +37,19 @@ AUTHORS:
 #*****************************************************************************
 
 import os
+import subprocess
 
-import logging
-log = logging.getLogger('git')
-log.addHandler(logging.NullHandler())
+from sageui.misc.cached_property import cached_property
 
-from git_error import GitError, DetachedHeadError
+from git_error import GitError, DetachedHeadError, UserEmailException
 
-SILENT = object()
-SUPER_SILENT = object()
-READ_OUTPUT = object()
+
+
+
+
+
+
+
 
 class GitInterface(object):
     r"""
@@ -40,17 +62,62 @@ class GitInterface(object):
 
     EXAMPLES::
 
-        >>> git
-        GitInterface()
-        >>> git.status()
+        >>> git   # doctest: +ELLIPSIS
+        Interface to git repo at /.../git_repo
     """
 
-    def __init__(self, repository_path):
-        self._dot_git = os.path.join(repository_path, '.git')
-        self._gitcmd = 'git'
-        self.__user_email_set = False
-        if not os.path.exists(self._dot_git):
-            raise ValueError("`%s` does not point to an existing directory."%self._dot_git)
+    def __init__(self, repository_path, verbose=False, git_dir=None, git_cmd=None):
+        self._verbose = verbose
+        if not os.path.exists(repository_path):
+            raise ValueError('{} does not point to an existing directory.'.format(repository_path))
+        self._work_tree = os.path.abspath(repository_path)
+        self._git_dir = os.path.join(self._work_tree, '.git') if git_dir is None else git_dir
+        self._git_cmd = 'git' if git_cmd is None else git_cmd
+        self._user_email_set = False
+
+    @property
+    def git_cmd(self):
+        """
+        The git executable
+        
+        EXAMPLES::
+
+            >>> git.git_cmd
+            'git'
+        """
+        return self._git_cmd
+
+    @property
+    def git_dir(self):
+        """
+        The git private directory. Usually ``.git``
+        
+        OUTPUT:
+
+        Absolute path as a string.
+
+        EXAMPLES::
+
+            >>> git.git_dir  # doctest: +ELLIPSIS
+            '/.../git_repo/.git'
+        """
+        return self._git_dir
+
+    @property
+    def work_tree(self):
+        """
+        The git work tree
+
+        OUTPUT:
+
+        Absolute path as a string.
+
+        EXAMPLES::
+
+            >>> git.work_tree # doctest: +ELLIPSIS
+            '/.../git_repo'
+        """
+        return self._work_tree
 
     def __repr__(self):
         r"""
@@ -58,10 +125,10 @@ class GitInterface(object):
         
         TESTS::
 
-            >>> repr(git)
-            'GitInterface()'
+            >>> repr(git)   # doctest: +ELLIPSIS
+            'Interface to git repo at /.../git_repo'
         """
-        return "GitInterface()"
+        return 'Interface to git repo at '+self.work_tree
 
     def get_state(self):
         r"""
@@ -137,7 +204,6 @@ class GitInterface(object):
             sage: git.rebase(SUPER_SILENT, abort=True)
             sage: git.get_state()
             ()
-
         """
         # logic based on zsh's git backend for vcs_info
         opj = os.path.join
@@ -223,7 +289,6 @@ class GitInterface(object):
         states = self.get_state()
         if not states:
             return
-
         state = states[0]
         if state.startswith('rebase'):
             self.execute_silent('rebase', abort=True)
@@ -237,7 +302,6 @@ class GitInterface(object):
             self.execute_silent('cherry-pick', abort=True)
         else:
             raise RuntimeError("'%s' is not a valid state"%state)
-
         return self.reset_to_clean_state()
 
     def reset_to_clean_working_directory(self, remove_untracked_files=False, remove_untracked_directories=False, remove_ignored=False):
@@ -340,7 +404,7 @@ class GitInterface(object):
         if remove_ignored and not remove_untracked_files:
             raise ValueError("remove_ignored only valid if remove_untracked_files is set")
 
-        self.reset(SILENT, hard=True)
+        self.reset(hard=True)
 
         if remove_untracked_files:
             switches = ['-f']
@@ -348,24 +412,32 @@ class GitInterface(object):
             if remove_ignored: switches.append("-x")
             self.clean(*switches)
 
-    def _run_git(self, cmd, args, kwds, **ckwds):
+    def _log(self, prefix, log):
+        if self._verbose:
+            for line in log.splitlines():
+                print 'DEBUG '+prefix+': '+line
+
+    def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
         r"""
-        Common implementation for :meth:`execute`, :meth:`execute_silent`,
-        :meth:`execute_supersilent`, and :meth:`read_output`
+        Run git
 
         INPUT:
 
-        - ``cmd`` - git command run
+        - ``cmd`` -- git command run
 
-        - ``args`` - extra arguments for git
+        - ``args`` -- extra arguments for git
 
-        - ``kwds`` - extra keywords for git
+        - ``kwds`` -- extra keywords for git
 
-        - ``ckwds`` - Popen like keywords but with the following changes
+        - ``ckwds`` -- Popen like keywords but with the following changes
 
-          - ``stdout`` - if set to ``False`` will supress stdout
+        - ``popen_stdout`` -- Popen-like keywords.
 
-          - ``stderr`` - if set to ``False`` will supress stderr
+        - ``popen_stderr`` -- Popen-like keywords.
+        
+        OUTPUT:
+
+        Tuple ``(exit_code, stdout, stderr, cmd)``.
 
         .. WARNING::
 
@@ -400,20 +472,8 @@ class GitInterface(object):
             Traceback (most recent call last):
             ...
             AssertionError: possible attempt to work with the live repository/directory in a doctest - did you forget to dev._chdir()?
-
-        """
-        import os
-
-        # not sure which commands could possibly create a commit object with
-        # some crazy flags set - these commands should be safe
-        if cmd not in [ "config", "diff", "grep", "log", "ls_remote", "remote", "reset", "show", "show_ref", "status", "symbolic_ref" ]:
-            self._check_user_email()
-
-        s = [self._gitcmd, "--git-dir=%s"%self._dot_git, cmd]
-
-        env = ckwds.setdefault('env', dict(os.environ))
-        env.update(kwds.pop('env', {}))
-
+        """ 
+        s = [self.git_cmd, cmd]
         for k, v in kwds.iteritems():
             if len(k) == 1:
                 k = '-' + k
@@ -425,50 +485,21 @@ class GitInterface(object):
                 s.extend((k, v))
         if args:
             s.extend(a for a in args if a is not None)
-
         s = [str(arg) for arg in s]
+        complete_cmd = ' '.join(s)
+        self._log('cmd', complete_cmd)
 
-        complete_cmd = " ".join([arg for i,arg in enumerate(s) if i!=1]) # drop --git-dir from debug output
-        log.debug(complete_cmd)
-        if ckwds.get('dryrun', False):
-            return s
-
-        import subprocess
-        drop_stdout = ckwds.get('stdout') is False
-        read_stdout = ckwds.get('stdout') is str
-        drop_stderr = ckwds.get('stderr') is False
-        read_stderr = ckwds.get('stderr') is str
-
-        if drop_stdout or read_stdout:
-            ckwds['stdout'] = subprocess.PIPE
-        if drop_stderr or read_stderr:
-            ckwds['stderr'] = subprocess.PIPE
-
-        process = subprocess.Popen(s, **ckwds)
+        env = dict(os.environ)
+        env['GIT_DIR'] = self.git_dir
+        env['GIT_WORK_TREE'] = self.work_tree
+        process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
         stdout, stderr = process.communicate()
         retcode = process.poll()
-
-        # recover stdout and stderr for debugging on non-zero exit code
-        if retcode:
-            if drop_stdout or read_stdout:
-                pass
-            else:
-                stdout = None
-
-            if drop_stderr or read_stderr:
-                pass
-            else:
-                stderr = None
-        else:
-            if not read_stdout:
-                stdout = None
-            if not read_stderr:
-                stderr = None
-        if read_stdout and len(stdout)>0:
-            log.debug(stdout)
-        if read_stderr and len(stderr)>0:
-            log.debug(stderr)
-        return retcode, stdout, stderr, complete_cmd
+        if stdout is not None and popen_stdout is subprocess.PIPE:
+            self._log('stdout', stdout)
+        if stderr is not None and popen_stderr is subprocess.PIPE:
+            self._log('stderr', stderr)
+        return {'rc':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':s}
 
     def execute(self, cmd, *args, **kwds):
         r"""
@@ -506,100 +537,21 @@ class GitInterface(object):
             GitError: git returned with non-zero exit code (129)
 
         """
-        exit_code, stdout, stderr, cmd = self._run_git(cmd, args, kwds)
-        if exit_code:
-            raise GitError(exit_code, cmd, stdout, stderr)
+        # not sure which commands could possibly create a commit object with
+        # some crazy flags set - these commands should be safe
+        if cmd not in [ "config", "diff", "grep", "log", "ls_remote", "remote", "reset", "show", "show_ref", "status", "symbolic_ref" ]:
+            self._check_user_email()
+        result = self._run(cmd, args, kwds, 
+                           popen_stdout=subprocess.PIPE,
+                           popen_stderr=subprocess.PIPE)
+        if result['rc']:
+            raise GitError(result['rc'], result['cmd'], result['stdout'], result['stderr'])
+        return result['stdout']
 
     __call__ = execute
-
-    def execute_silent(self, cmd, *args, **kwds):
-        r"""
-        Run git and supress its output to stdout.
-
-        Same input as :meth:`execute`.
-
-        Raises an error if git returns a non-zero exit code.
-
-        EXAMPLES::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
-
-            sage: git.execute_silent('status')
-            sage: git.execute_silent('status',foo=True) # --foo is not a valid parameter
-            Traceback (most recent call last):
-            ...
-            GitError: git returned with non-zero exit code (129)
-
-        """
-        exit_code, stdout, stderr, cmd = self._run_git(cmd, args, kwds, stdout=False)
-        if exit_code:
-            raise GitError(exit_code, cmd, stdout, stderr)
-
-    def execute_supersilent(self, cmd, *args, **kwds):
-        r"""
-        Run git and supress its output to stdout and stderr.
-
-        Same input as :meth:`execute`.
-
-        Raises an error if git returns a non-zero exit code.
-
-        EXAMPLES::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
-
-            sage: git.execute_supersilent('status')
-            sage: git.execute_supersilent('status',foo=True) # --foo is not a valid parameter
-            Traceback (most recent call last):
-            ...
-            GitError: git returned with non-zero exit code (129)
-
-        """
-        exit_code, stdout, stderr, cmd = self._run_git(cmd, args, kwds, stdout=False, stderr=False)
-        if exit_code:
-            raise GitError(exit_code, cmd, stdout, stderr)
-
-    def read_output(self, cmd, *args, **kwds):
-        r"""
-        Run git and return its output to stdout.
-
-        Same input as :meth:`execute`.
-
-        Raises an error if git returns a non-zero exit code.
-
-        EXAMPLES::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
-
-            sage: git.read_output('status')
-            '# On branch master\n#\n# Initial commit\n#\nnothing to commit (create/copy files and use "git add" to track)\n'
-            sage: git.read_output('status',foo=True) # --foo is not a valid parameter
-            Traceback (most recent call last):
-            ...
-            GitError: git returned with non-zero exit code (129)
-
-        """
-        exit_code, stdout, stderr, cmd = self._run_git(cmd, args, kwds, stdout=str, stderr=False)
-        if exit_code:
-            raise GitError(exit_code, cmd, stdout, stderr)
-        return stdout
+    silet = execute
+    supersilent = execute
+    read_output = execute
 
     def is_child_of(self, a, b):
         r"""
@@ -638,7 +590,6 @@ class GitInterface(object):
             False
             sage: git.is_child_of('master', 'master')
             True
-
         """
         return self.is_ancestor_of(b, a)
 
@@ -679,47 +630,8 @@ class GitInterface(object):
             False
             sage: git.is_ancestor_of('master', 'master')
             True
-
         """
-        return not self.rev_list(READ_OUTPUT, '{}..{}'.format(b, a)).splitlines()
-
-    def has_uncommitted_changes(self):
-        r"""
-        Return whether there are uncommitted changes, i.e., whether there are
-        modified files which are tracked by git.
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        An untracked file does not count towards uncommited changes::
-
-            sage: os.chdir(config['git']['src'])
-            sage: open('untracked','w').close()
-            sage: git.has_uncommitted_changes()
-            False
-
-        Once added to the index it does::
-
-            sage: git.add('untracked')
-            sage: git.has_uncommitted_changes()
-            True
-            sage: git.commit(SUPER_SILENT, '-m', 'tracking untracked')
-            sage: git.has_uncommitted_changes()
-            False
-            sage: with open('untracked','w') as f: f.write('version 0')
-            sage: git.has_uncommitted_changes()
-            True
-
-        """
-        return bool([line for line in self.status(READ_OUTPUT, porcelain=True).splitlines() if not line.startswith('?')])
+        return not self.rev_list('{}..{}'.format(b, a)).splitlines()
 
     def untracked_files(self):
         r"""
@@ -729,103 +641,11 @@ class GitInterface(object):
         EXAMPLES::
 
             >>> git.untracked_files()
+            DEBUG cmd: git ls-files --exclude-standard --other
+            DEBUG stdout: untracked
             ['untracked']
         """
         return self.read_output('ls-files', other=True, exclude_standard=True).splitlines()
-
-    def local_branches(self):
-        r"""
-        Return a list of local branches sorted by last commit time.
-
-        EXAMPLES::
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-        Use this repository as a remote repository::
-
-            sage: config2 = DoctestConfig()
-            sage: git2 = GitInterface(config2["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config2['git']['src'])
-            sage: git2.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git2.remote('add', 'git', config['git']['src'])
-            sage: git2.fetch(SUPER_SILENT, 'git')
-            sage: git2.checkout(SUPER_SILENT, "branch1")
-            sage: git2.branch("-a")
-            * branch1
-              master
-              remotes/git/branch1
-              remotes/git/branch2
-              remotes/git/master
-
-            sage: git2.local_branches()
-            ['branch1', 'master']
-            sage: os.chdir(config['git']['src'])
-            sage: git.local_branches()
-            ['branch1', 'branch2', 'master']
-
-        """
-        result = self.for_each_ref(READ_OUTPUT, 'refs/heads/',
-                    sort='-committerdate', format="%(refname)").splitlines()
-        return [head[11:] for head in result]
-
-    def current_branch(self):
-        r"""
-        Return the current branch
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.commit(SILENT, '-m','second commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-            sage: git.current_branch()
-            'master'
-            sage: git.checkout(SUPER_SILENT, 'branch1')
-            sage: git.current_branch()
-            'branch1'
-
-        If ``HEAD`` is detached::
-
-            sage: git.checkout(SUPER_SILENT, 'master~')
-            sage: git.current_branch()
-            Traceback (most recent call last):
-            ...
-            DetachedHeadError: unexpectedly, git is in a detached HEAD state
-
-        """
-        try:
-            return self.symbolic_ref(READ_OUTPUT, 'HEAD', short=True, quiet=True).strip()
-        except GitError as e:
-            if e.exit_code == 1:
-               raise DetachedHeadError()
-            raise
 
     def commit_for_branch(self, branch):
         r"""
@@ -896,7 +716,7 @@ class GitInterface(object):
 
         """
         try:
-            return self.show_ref(READ_OUTPUT, ref, hash=True, verify=True).strip()
+            return self.show_ref(ref, hash=True, verify=True).strip()
         except GitError:
             return None
 
@@ -954,104 +774,76 @@ class GitInterface(object):
             sage: git._check_user_email()
 
         """
-        if self.__user_email_set:
+        if self._user_email_set:
             return
-        self.config(SUPER_SILENT, "user.name")
-        self.config(SUPER_SILENT, "user.email")
-        self.__user_email_set = True
+        name = self._run('config', ['user.name'], popen_stdout=open('/dev/null', 'wb'))
+        email = self._run('config', ['user.email'], popen_stdout=open('/dev/null', 'wb'))
+        if (name['rc'] == 0) and (email['rc'] == 0):
+            self._user_email_set = True
+        else:
+            raise UserEmailException()
 
-for git_cmd_ in (
-        "add",
-        "am",
-        "apply",
-        "bisect",
-        "branch",
-        "config",
-        "checkout",
-        "cherry_pick",
-        "clean",
-        "clone",
-        "commit",
-        "diff",
-        "fetch",
-        "for_each_ref",
-        "format_patch",
-        "grep",
-        "init",
-        "log",
-        "ls_remote",
-        "merge",
-        "mv",
-        "pull",
-        "push",
-        "rebase",
-        "remote",
-        "reset",
-        "rev_list",
-        "rm",
-        "show",
-        "show_ref",
-        "stash",
-        "status",
-        "symbolic_ref",
-        "tag"
-        ):
-    def create_wrapper(git_cmd__):
-        r"""
-        Create a wrapper for ``git_cmd__``.
 
-        EXAMPLES::
 
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
-            sage: git.status()
-            # On branch master
-            #
-            # Initial commit
-            #
-            nothing to commit (create/copy files and use "git add" to track)
 
-        """
-        git_cmd = git_cmd__.replace("_","-")
-        def meth(self, *args, **kwds):
-            args = list(args)
-            if len([arg for arg in args if arg in (SILENT, SUPER_SILENT, READ_OUTPUT)]) > 1:
-                raise ValueError("at most one of SILENT, SUPER_SILENT, READ_OUTPUT allowed")
-            if SILENT in args:
-                args.remove(SILENT)
-                return self.execute_silent(git_cmd, *args, **kwds)
-            elif SUPER_SILENT in args:
-                args.remove(SUPER_SILENT)
-                return self.execute_supersilent(git_cmd, *args, **kwds)
-            elif READ_OUTPUT in args:
-                args.remove(READ_OUTPUT)
-                return self.read_output(git_cmd, *args, **kwds)
-            else:
-                return self.execute(git_cmd, *args, **kwds)
-        meth.__doc__ = r"""
-        Call `git {0}`.
+git_commands = (
+    "add",
+    "am",
+    "apply",
+    "bisect",
+    "branch",
+    "config",
+    "checkout",
+    "cherry_pick",
+    "clean",
+    "clone",
+    "commit",
+    "diff",
+    "fetch",
+    "for_each_ref",
+    "format_patch",
+    "grep",
+    "init",
+    "log",
+    "ls_remote",
+    "merge",
+    "mv",
+    "pull",
+    "push",
+    "rebase",
+    "remote",
+    "reset",
+    "rev_list",
+    "rm",
+    "show",
+    "show_ref",
+    "stash",
+    "status",
+    "symbolic_ref",
+    "tag"
+)
 
-        If `args` contains ``SILENT``, then output to stdout is supressed.
+def create_wrapper(git_cmd_underscore):
+    r"""
+    Create a wrapper for ``git_cmd_underscore``.
+    """
+    git_cmd = git_cmd_underscore.replace('_', '-')
+    def meth(self, *args, **kwds):
+        return self.execute(git_cmd, *args, **kwds)
+    meth.__doc__ = r"""
+    Call `git {0}`.
 
-        If `args` contains ``SUPER_SILENT``, then output to stdout and stderr
-        is supressed.
+    OUTPUT:
 
-        OUTPUT:
+    See :meth:`execute` for more information.
 
-        Returns ``None`` unless `args` contains ``READ_OUTPUT``; in that case,
-        the commands output to stdout is returned.
+    EXAMPLES:
 
-        See :meth:`execute` for more information.
+        sage: git.{1}() # not tested
+    """.format(git_cmd, git_cmd_underscore)
+    return meth
 
-        EXAMPLES:
 
-            sage: dev.git.{1}() # not tested
 
-        """.format(git_cmd, git_cmd__)
-        return meth
-    setattr(GitInterface, git_cmd_, create_wrapper(git_cmd_))
+for command in git_commands:
+    setattr(GitInterface, command, create_wrapper(command))

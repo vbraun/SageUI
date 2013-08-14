@@ -22,14 +22,17 @@ def test_trac_model():
 
 POPULATE_GIT_REPO = """
 git init .
-echo '123' > foo.txt
-git add .
-git commit -m 'initial commit'
+echo '123' > foo1.txt && git add . && git commit -m 'initial commit'
 git checkout -q -b 'my_branch'
+echo '234' > foo2.txt && git add . && git commit -m 'second commit'
 git checkout -q -b 'sageui/none/u/user/description'
+echo '345' > foo3.txt && git add . && git commit -m 'third commit'
 git checkout -q -b 'sageui/1000/u/user/description'
+echo '456' > foo4.txt && git add . && git commit -m 'fourth commit'
 git checkout -q -b 'sageui/1001/u/bob/work'
+echo '567' > foo5.txt && git add . && git commit -m 'fifth commit'
 git checkout -q -b 'sageui/1001/u/alice/work'
+echo '678' > foo6.txt && git add . && git commit -m 'sixth commit'
 git checkout -q -b 'sageui/1002/public/anything'
 touch untracked
 """
@@ -37,6 +40,7 @@ touch untracked
 def make_test_git_repo(temp_dir):
     try:
         cwd = os.getcwd()
+        os.mkdir(temp_dir)
         os.chdir(temp_dir)
         for line in POPULATE_GIT_REPO.splitlines():
             # print 'Executing', line
@@ -55,18 +59,22 @@ def test_git_model():
     import sageui.model.git_branch
     import sageui.model.git_repository
     import sageui.model.git_interface
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(MultiLineFormatter('%(name)s:%(levelname)s %(message)s'))
-    sageui.model.git_interface.log.addHandler(handler)
-    sageui.model.git_interface.log.setLevel(logging.DEBUG)
+    #handler = logging.StreamHandler(sys.stdout)
+    #handler.setLevel(logging.DEBUG)
+    #handler.setFormatter(MultiLineFormatter('%(name)s:%(levelname)s %(message)s'))
+    #sageui.model.git_interface.log.addHandler(handler)
+    #sageui.model.git_interface.log.setLevel(logging.DEBUG)
+    temp_dir = tempfile.mkdtemp()
+    repo_path = os.path.join(temp_dir, 'git_repo')
     try:
-        temp_dir = tempfile.mkdtemp()
-        make_test_git_repo(temp_dir)
-        git_repo = sageui.model.git_repository.GitRepository(temp_dir)
-        doctest.testmod(sageui.model.git_branch, globs={'git':git_repo})
-        doctest.testmod(sageui.model.git_repository, globs={'git':git_repo})
-        doctest.testmod(sageui.model.git_interface, globs={'git':git_repo.git})
+        make_test_git_repo(repo_path)
+        repo = sageui.model.git_repository.GitRepository(repo_path)
+        repo.git._user_email_set = True
+        doctest.testmod(sageui.model.git_branch, globs={'repo':repo})
+        doctest.testmod(sageui.model.git_repository, globs={'repo':repo})
+        repo = sageui.model.git_repository.GitRepository(repo_path, verbose=True)
+        repo.git._user_email_set = False
+        doctest.testmod(sageui.model.git_interface, globs={'git':repo.git})
     finally:
         shutil.rmtree(temp_dir)
 
