@@ -11,11 +11,15 @@ EXAMPLES::
 
 """
 
+from git_commit import GitCommit
+
 
 def GitBranch(git_repository, name, commit=None):
     """
     Construct a branch object given the name as a string
     """
+    if commit is not None:
+        commit = GitCommit(git_repository, commit)
     prefix = git_repository.prefix
     prefix_nonumber = git_repository.prefix_nonumber
     if '/' not in name:
@@ -76,19 +80,23 @@ class GitBranchABC(object):
             '087e1fdd0fe6f4c596f5db22bc54567b032f5d2b'
         """
         if self._commit is None:
-            self._commit = self.repository.git.show_ref(
+            sha1 = self.repository.git.show_ref(
                 'refs/heads/'+self.full_branch_name, verify=True, hash=True)
+            self._commit = GitCommit(self.repository, sha1)
         return self._commit
 
     def __hash__(self):
-        return hash(self.full_branch_name)
+        key = (self.full_branch_name, self.commit.sha1)
+        return hash(key)
 
     def __cmp__(self, other):
         c = cmp(type(self), type(other))
         if c != 0:
             return c
-        return cmp(self.full_branch_name, other.full_branch_name)
-
+        self_key = (self.full_branch_name, self.commit.sha1)
+        other_key = (other.full_branch_name, other.commit.sha1)
+        return cmp(self_key, other_key)
+        
 
 class GitLocalBranch(GitBranchABC):
     """

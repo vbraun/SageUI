@@ -19,7 +19,6 @@ class Presenter(object):
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, self.setup_assistant_first_run_finished)
         else:
-            #self.checkout_branch('u/user/description', 12345)
             self.show_git_window()
             #self.show_commandline_window()
             #self.show_trac_window()

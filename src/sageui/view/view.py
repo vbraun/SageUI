@@ -107,7 +107,7 @@ class View(object):
     def set_git_branches(self, local_branches, current_branch=None):
         assert current_branch in local_branches
         self.git_window.set_branches(local_branches, current_branch)
-        self.git_window.set_bases(None)
+        self.git_window.set_bases(current_branch.commit.get_parents())
 
     ###################################################################
     # The about dialog

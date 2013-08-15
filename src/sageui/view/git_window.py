@@ -51,9 +51,13 @@ class GitWindow(Buildable, Window):
         view.set_entry_text_column(1)
 
     def _init_base(self, view, store):
+        print view.get_cells()
         name = gtk.CellRendererText()
         view.pack_start(name, expand=True)
         view.add_attribute(name, 'text', 0)  
+        sha1 = gtk.CellRendererText()
+        view.pack_end(sha1, expand=False)
+        view.add_attribute(sha1, 'text', 1)  
 
     @property
     def prefix(self):
@@ -93,8 +97,11 @@ class GitWindow(Buildable, Window):
 
     def set_bases(self, git_commit_list):
         self.base_store.clear()
-        self.base_store.append(['HEAD', '9adadeb329a7a0cade90daa6c85353a037f660bb'])
+        for c in git_commit_list:
+            #print c, c.title, c.sha1
+            self.base_store.append([c.title, c.short_sha1])
         self.base_view.set_active(0)
+        self.base_view.get_child().set_text('foobar')
 
     def set_change_files(self, git_file_status_list):
         pass

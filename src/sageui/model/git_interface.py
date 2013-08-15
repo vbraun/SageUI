@@ -62,6 +62,27 @@ class GitInterfaceSilentProxy(object):
 
 
 
+class GitInterfacePrintProxy(object):
+    """
+    Execute a git command and print to stdout like the commandline client.
+    """
+    def __init__(self, actual_interface):
+        self._interface = actual_interface
+
+    def execute(self, cmd, *args, **kwds):
+        result = self._interface._run(cmd, args, kwds, 
+                                      popen_stdout=subprocess.PIPE, 
+                                      popen_stderr=subprocess.PIPE)
+        print(result['stdout'])
+        if result['stderr']:
+            WARNING = '\033[93m'
+            RESET = '\033[0m'
+            print(WARNING+result['stderr']+RESET)
+        return None
+
+
+
+
 class GitInterface(object):
     r"""
     A wrapper around the ``git`` command line tool.
@@ -86,6 +107,7 @@ class GitInterface(object):
         self._git_cmd = 'git' if git_cmd is None else git_cmd
         self._user_email_set = False
         self.silent = GitInterfaceSilentProxy(self)
+        self.echo = GitInterfacePrintProxy(self)
 
     @property
     def git_cmd(self):
@@ -297,30 +319,26 @@ class GitInterface(object):
             sage: git.get_state()
             ()
         """
-        states = self.get_state()
-        if not states:
-            return
-        state = states[0]
-        if state.startswith('rebase'):
-            self.execute_silent('rebase', abort=True)
-        elif state == 'am':
-            self.execute_silent('am', abort=True)
-        elif state == 'merge':
-            self.execute_silent('merge', abort=True)
-        elif state == 'bisect':
-            raise NotImplementedError(state)
-        elif state.startswith('cherry'):
-            self.execute_silent('cherry-pick', abort=True)
-        else:
-            raise RuntimeError("'%s' is not a valid state"%state)
-        return self.reset_to_clean_state()
+        for state in self.get_state():
+            if state.startswith('rebase'):
+                self.rebase(abort=True)
+            elif state == 'am':
+                self.am(abort=True)
+            elif state == 'merge':
+                self.merge(abort=True)
+            elif state == 'bisect':
+                raise NotImplementedError(state)
+            elif state.startswith('cherry'):
+                self.cherry_pick(abort=True)
+            else:
+                raise ValueError("'%s' is not a valid state"%state)
 
     def _log(self, prefix, log):
         if self._verbose:
             for line in log.splitlines():
                 print 'DEBUG '+prefix+': '+line
 
-    def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
+    def _run_unsafe(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
         r"""
         Run git
 
@@ -366,7 +384,7 @@ class GitInterface(object):
             if v is True:
                 s.append(k)
             elif v is not False:
-                s.extend((k, v))
+                s.append(k+'='+str(v))
         if args:
             s.extend(a for a in args if a is not None)
         s = [str(arg) for arg in s]
@@ -384,6 +402,18 @@ class GitInterface(object):
         if stderr is not None and popen_stderr is subprocess.PIPE:
             self._log('stderr', stderr)
         return {'exit_code':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':complete_cmd}
+
+    def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
+        # not sure which commands could possibly create a commit object with
+        # some crazy flags set - these commands should be safe
+        if cmd not in [ "config", "diff", "grep", "log", "ls_remote", "remote", "reset", "show", "show_ref", "status", "symbolic_ref" ]:
+            self._check_user_email()
+        result = self._run_unsafe(cmd, args, kwds,
+                                  popen_stdout=popen_stdout,
+                                  popen_stderr=popen_stderr)
+        if result['exit_code']:
+            raise GitError(result)
+        return result
 
     def execute(self, cmd, *args, **kwds):
         r"""
@@ -414,15 +444,9 @@ class GitInterface(object):
             ...
             GitError: git returned with non-zero exit code (129)
         """
-        # not sure which commands could possibly create a commit object with
-        # some crazy flags set - these commands should be safe
-        if cmd not in [ "config", "diff", "grep", "log", "ls_remote", "remote", "reset", "show", "show_ref", "status", "symbolic_ref" ]:
-            self._check_user_email()
-        result = self._run(cmd, args, kwds, 
+        result = self._run(cmd, args, kwds,
                            popen_stdout=subprocess.PIPE,
                            popen_stderr=subprocess.PIPE)
-        if result['exit_code']:
-            raise GitError(result)
         return result['stdout']
 
     __call__ = execute
@@ -450,8 +474,8 @@ class GitInterface(object):
         """
         if self._user_email_set:
             return
-        name = self._run('config', ['user.name'], popen_stdout=open('/dev/null', 'wb'))
-        email = self._run('config', ['user.email'], popen_stdout=open('/dev/null', 'wb'))
+        name = self._run_unsafe('config', ['user.name'], popen_stdout=open('/dev/null', 'wb'))
+        email = self._run_unsafe('config', ['user.email'], popen_stdout=open('/dev/null', 'wb'))
         if (name['exit_code'] == 0) and (email['exit_code'] == 0):
             self._user_email_set = True
         else:
@@ -523,3 +547,4 @@ def create_wrapper(git_cmd_underscore):
 for command in git_commands:
     setattr(GitInterface, command, create_wrapper(command))
     setattr(GitInterfaceSilentProxy, command, create_wrapper(command))
+    setattr(GitInterfacePrintProxy, command, create_wrapper(command))

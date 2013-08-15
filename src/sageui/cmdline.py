@@ -4,7 +4,7 @@ Handle Command Line Options and Launch the Sage UI
 
 import sys
 import os
-
+import importlib
 
 def check_gui_prerequisites():
     try:
@@ -35,19 +35,30 @@ def check_gui_prerequisites():
         sys.exit(1)
 
 
+def debug_shell(app):
+    from IPython.lib.inputhook import enable_gtk
+    enable_gtk()
+    from IPython.frontend.terminal.ipapp import TerminalIPythonApp
+    ip = TerminalIPythonApp.instance()
+    ip.initialize(argv=[])
+    ip.shell.enable_gui('gtk')
+    ip.shell.user_global_ns['app'] = app
+    ip.shell.user_global_ns['repo'] = app.model.repo
+    ip.shell.user_global_ns['git'] = app.model.repo.git
+    def ipy_import(module_name, identifier):
+        module = importlib.import_module(module_name)
+        ip.shell.user_global_ns[identifier] = getattr(module, identifier) 
+    ipy_import('sageui.model.git_interface', 'GitInterface')
+    ipy_import('sageui.model.git_repository', 'GitRepository')
+    ip.start()
+
+
 def launch_gui(debug=False):
     check_gui_prerequisites()
     from sageui.app import Application
     app = Application()
     if debug:
-        from IPython.lib.inputhook import enable_gtk
-        enable_gtk()
-        from IPython.frontend.terminal.ipapp import TerminalIPythonApp
-        ip = TerminalIPythonApp.instance()
-        ip.initialize(argv=[])
-        ip.shell.enable_gui('gtk')
-        ip.shell.user_global_ns['app'] = app
-        ip.start()
+        debug_shell(app)
     else:
         import gtk
         gtk.main()

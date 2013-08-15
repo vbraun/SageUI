@@ -40,6 +40,13 @@ class GitRepository(object):
     def git(self):
         return GitInterface(self.repo_path, verbose=self._verbose)
 
+    @property
+    def master(self):
+        return GitLocalBranch(self, 'master')
+
+    def get_branch(self, branch_name):
+        return GitBranch(self, branch_name)
+
     def untracked_files(self):
         r"""
         Return a list of file names for files that are not tracked by git and
@@ -75,9 +82,9 @@ class GitRepository(object):
             'refs/heads/', sort='committerdate', format="%(objectname) %(refname:short)")
         result = []
         for line in branches.splitlines():
-            commit = line[0:40]
+            sha1 = line[0:40]
             name = line[41:]
-            branch = GitBranch(self, name, commit)
+            branch = GitBranch(self, name, sha1)
             if branch:
                 result.append(branch)
         return result
