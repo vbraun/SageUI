@@ -37,6 +37,8 @@ class GitWindow(Buildable, Window):
         self.diff = builder.get_object('git_diff')
         builder.connect_signals(self)
         self.repo_path = None
+        self._branch_names = []
+        self._current_branch = None
         self._set_ticket_number(None)
 
     def _init_branch(self, view, store):
@@ -51,13 +53,12 @@ class GitWindow(Buildable, Window):
         view.set_entry_text_column(1)
 
     def _init_base(self, view, store):
-        print view.get_cells()
         name = gtk.CellRendererText()
         view.pack_start(name, expand=True)
         view.add_attribute(name, 'text', 0)  
-        sha1 = gtk.CellRendererText()
-        view.pack_end(sha1, expand=False)
-        view.add_attribute(sha1, 'text', 1)  
+        #sha1 = gtk.CellRendererText()
+        #view.pack_end(sha1, expand=False)
+        #view.add_attribute(sha1, 'text', 1)  
 
     @property
     def prefix(self):
@@ -73,15 +74,17 @@ class GitWindow(Buildable, Window):
 
     def set_branches(self, local_branches, current_branch):
         self.branch_store.clear()
+        self._branch_names = []
         active = None
         for i, branch in enumerate(local_branches):
-            number_string = 'Trac #{0}'.format(branch.ticket_number)
-            self.branch_store.append([i, branch.name, number_string])
+            n = branch.ticket_number
+            number_string = 'Trac #{0}'.format(n)
+            self.branch_store.append([i, branch.name, number_string, n])
+            self._branch_names.append(branch.name)
             if branch == current_branch:
                 active = i
+        self._current_branch = None
         self.branch_entry.set_active(active)
-        #text = self.branch_entry.get_child()
-        #text.set_text(current_branch.name)
         self._set_ticket_number(current_branch.ticket_number)
 
     def _set_ticket_number(self, ticket_number=None):
@@ -101,7 +104,6 @@ class GitWindow(Buildable, Window):
             #print c, c.title, c.sha1
             self.base_store.append([c.title, c.short_sha1])
         self.base_view.set_active(0)
-        self.base_view.get_child().set_text('foobar')
 
     def set_change_files(self, git_file_status_list):
         pass
@@ -110,8 +112,15 @@ class GitWindow(Buildable, Window):
         pass
 
     def on_git_branch_entry_changed(self, widget, data=None):
-        print 'changed', widget, data
-        return False
+        n = self.branch_entry.get_active()
+        if n == -1:
+            return
+        index, name, number_str, number = self.branch_store[n]
+        if self._current_branch is None:   
+            # callback is activated once at the beginning
+            self._current_branch = (name, number)
+        else:
+            self.presenter.checkout_branch(name, number)
 
     def on_git_window_realize(self, widget, data=None):
         self.presenter.show_current_branch()

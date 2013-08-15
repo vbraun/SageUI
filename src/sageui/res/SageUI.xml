@@ -342,6 +342,8 @@
       <column type="gchararray"/>
       <!-- column-name ticket -->
       <column type="gchararray"/>
+      <!-- column-name ticket_number -->
+      <column type="PyObject"/>
     </columns>
   </object>
   <object class="GtkListStore" id="git_files_store">
@@ -1135,6 +1137,9 @@
     <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
     <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
     <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>
