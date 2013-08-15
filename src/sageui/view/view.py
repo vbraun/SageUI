@@ -104,8 +104,9 @@ class View(object):
         self.git_window.hide()
         self._open_windows.remove(self.git_window)
 
-    def set_git_branch(self, git_branch):
-        self.git_window.set_branch(git_branch)
+    def set_git_branches(self, local_branches, current_branch=None):
+        assert current_branch in local_branches
+        self.git_window.set_branches(local_branches, current_branch)
         self.git_window.set_bases(None)
 
     ###################################################################

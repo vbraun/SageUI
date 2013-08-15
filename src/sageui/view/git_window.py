@@ -45,6 +45,7 @@ class GitWindow(Buildable, Window):
         #view.pack_start(branch, expand=True)
         view.add_attribute(branch, 'text', 1)  
         ticket = gtk.CellRendererText()
+        ticket.set_property('xalign', 0)
         view.pack_end(ticket, expand=False)
         view.add_attribute(ticket, 'text', 2)  
         view.set_entry_text_column(1)
@@ -66,13 +67,18 @@ class GitWindow(Buildable, Window):
         self.base_store.clear()
         self.diff.get_buffer().set_text('')
 
-    def set_branch(self, git_branch):
+    def set_branches(self, local_branches, current_branch):
         self.branch_store.clear()
-        number_string = 'Trac #{0}'.format(git_branch.ticket_number)
-        self.branch_store.append([0, git_branch.name, number_string])
-        text = self.branch_entry.get_child()
-        text.set_text(git_branch.name)
-        self._set_ticket_number(git_branch.ticket_number)
+        active = None
+        for i, branch in enumerate(local_branches):
+            number_string = 'Trac #{0}'.format(branch.ticket_number)
+            self.branch_store.append([i, branch.name, number_string])
+            if branch == current_branch:
+                active = i
+        self.branch_entry.set_active(active)
+        #text = self.branch_entry.get_child()
+        #text.set_text(current_branch.name)
+        self._set_ticket_number(current_branch.ticket_number)
 
     def _set_ticket_number(self, ticket_number=None):
         self.ticket_number = ticket_number
@@ -99,6 +105,9 @@ class GitWindow(Buildable, Window):
     def on_git_branch_entry_changed(self, widget, data=None):
         print 'changed', widget, data
         return False
+
+    def on_git_window_realize(self, widget, data=None):
+        self.presenter.show_current_branch()
 
     def on_git_menu_preferences_activate(self, widget, data=None):
         self.presenter.show_preferences_dialog()

@@ -359,6 +359,7 @@
     <property name="title" translatable="yes">Sage Git Repository</property>
     <property name="icon">icons/git.svg</property>
     <signal name="delete-event" handler="on_git_window_delete_event" swapped="no"/>
+    <signal name="realize" handler="on_git_window_realize" swapped="no"/>
     <child>
       <object class="GtkVBox" id="vbox3">
         <property name="visible">True</property>
@@ -1134,6 +1135,9 @@
     <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
     <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
     <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

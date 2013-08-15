@@ -22,7 +22,7 @@ def GitBranch(git_repository, name, commit=None):
         return GitLocalBranch(git_repository, name, commit)
     elif name.startswith(prefix_nonumber+'/'):
         description = name[len(prefix_nonumber)+1:]
-        return GitManagedBranch(git_repository, description, commit, None)
+        return GitManagedBranch(git_repository, description, None, commit)
     elif name.startswith(prefix+'/'):
         start = len(prefix) + 1
         end = name.find('/', start)
@@ -30,7 +30,7 @@ def GitBranch(git_repository, name, commit=None):
         description = name[end+1:]
         try:
             number = int(number)
-            return GitManagedBranch(git_repository, description, commit, number)
+            return GitManagedBranch(git_repository, description, number, commit)
         except ValueError:
             pass
     
@@ -50,8 +50,15 @@ class GitBranchABC(object):
     def ticket_string(self):
         raise NotImplementedError
 
+    @property 
+    def ticket_number(self):
+        return None
+
     @property
     def full_branch_name(self):
+        """
+        The branch name in the git repository
+        """
         return self.name
 
     def __repr__(self):
@@ -73,6 +80,15 @@ class GitBranchABC(object):
                 'refs/heads/'+self.full_branch_name, verify=True, hash=True)
         return self._commit
 
+    def __hash__(self):
+        return hash(self.full_branch_name)
+
+    def __cmp__(self, other):
+        c = cmp(type(self), type(other))
+        if c != 0:
+            return c
+        return cmp(self.full_branch_name, other.full_branch_name)
+
 
 class GitLocalBranch(GitBranchABC):
     """
@@ -82,7 +98,7 @@ class GitLocalBranch(GitBranchABC):
     not start with ``sageui/``.
     """
     
-    def __init__(self, repository, branch_name, commit):
+    def __init__(self, repository, branch_name, commit=None):
         GitBranchABC.__init__(self, repository, branch_name, commit)
 
     @property 
@@ -95,9 +111,9 @@ class GitManagedBranch(GitBranchABC):
     A branch that SageUI created for its own private use
     """
     
-    def __init__(self, repository, branch_name, commit, ticket_number):
+    def __init__(self, repository, branch_name, ticket_number, commit=None):
         GitBranchABC.__init__(self, repository, branch_name, commit)
-        self.ticket_number = ticket_number
+        self._ticket_number = ticket_number
 
     @property 
     def ticket_string(self):
@@ -105,6 +121,10 @@ class GitManagedBranch(GitBranchABC):
             return 'none'
         else:
             return str(self.ticket_number)
+
+    @property
+    def ticket_number(self):
+        return self._ticket_number
 
     @property
     def full_branch_name(self):

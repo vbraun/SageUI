@@ -9,7 +9,7 @@ The managed branches are all named `sageui/1234/u/user/description`.
 """
 
 from git_error import GitError, DetachedHeadException
-from git_branch import GitBranch
+from git_branch import GitBranch, GitLocalBranch, GitManagedBranch
 from git_interface import GitInterface
 
 from sageui.misc.cached_property import cached_property
@@ -53,7 +53,11 @@ class GitRepository(object):
         return self.git.ls_files(other=True, exclude_standard=True).splitlines()
 
     def checkout_branch(self, branch_name, ticket_number=None):
-        branch = GitManagedBranch(self, branch_name, ticket_number)
+        if '/' in branch_name:
+            branch = GitManagedBranch(self, branch_name, ticket_number)
+        else:
+            branch = GitLocalBranch(self, branch_name)
+        assert branch is not None
         return branch
 
     def local_branches(self):

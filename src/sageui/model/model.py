@@ -26,8 +26,15 @@ class Model:
         from sage_installation import SageInstallation
         return SageInstallation(sage_root)
 
+    def list_branches(self):
+        return self.repo.local_branches()
+
+    def current_branch(self):
+        return self.repo.current_branch()
+        
     def checkout_branch(self, branch_name, ticket_number=None):
-        self.repo.checkout_branch(branch_name, ticket_number)
+        return self.repo.checkout_branch(branch_name, ticket_number)
+
 
 
     ###################################################################

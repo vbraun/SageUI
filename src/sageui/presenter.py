@@ -19,7 +19,7 @@ class Presenter(object):
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, self.setup_assistant_first_run_finished)
         else:
-            self.checkout_branch('u/user/description', 12345)
+            #self.checkout_branch('u/user/description', 12345)
             self.show_git_window()
             #self.show_commandline_window()
             #self.show_trac_window()
@@ -53,9 +53,15 @@ class Presenter(object):
         if not self.view.have_open_window():
             self.terminate()
 
+    def show_current_branch(self):
+        local_branches = self.model.list_branches()
+        current_branch = self.model.current_branch()
+        self.view.set_git_branches(local_branches, current_branch)
+
     def checkout_branch(self, branch_name, ticket_number=None):
         branch = self.model.checkout_branch(branch_name, ticket_number)
-        self.view.set_git_branch(branch)
+        branches = self.model.list_branches()
+        self.view.set_git_branches(branches, branch)
 
     ###################################################################
     # Preferences dialog
