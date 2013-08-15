@@ -3,20 +3,20 @@ A Trac Ticket
 
 EXAMPLES::
 
-    >>> from datetime import datetime
-    >>> create_time = datetime.fromtimestamp(1376149000)
-    >>> modify_time = datetime.fromtimestamp(1376150000)
-    >>> from sageui.model.trac_ticket import TracTicket_class
-    >>> t = TracTicket_class(123, create_time, modify_time, {})
-    >>> t    # doctest: +ELLIPSIS
+    sage: from datetime import datetime
+    sage: create_time = datetime.fromtimestamp(1376149000)
+    sage: modify_time = datetime.fromtimestamp(1376150000)
+    sage: from sageui.model.trac_ticket import TracTicket_class
+    sage: t = TracTicket_class(123, create_time, modify_time, {})
+    sage: t
     <sageui.model.trac_ticket.TracTicket_class object at 0x...>
-    >>> t.get_number()
+    sage: t.get_number()
     123
-    >>> t.get_title()
+    sage: t.get_title()
     '+++ no summary +++'
-    >>> t.get_ctime()
+    sage: t.get_ctime()
     datetime.datetime(2013, 8, 10, 16, 36, 40)
-    >>> t.get_mtime()
+    sage: t.get_mtime()
     datetime.datetime(2013, 8, 10, 16, 53, 20)
 """
 

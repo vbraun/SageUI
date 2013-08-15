@@ -6,21 +6,23 @@ a raw wrapper around calls to git and retuns the output as strings.
 
 EXAMPLES::
 
-    >>> git._check_user_email()
+    sage: globals()
+
+    sage: git._check_user_email()
     DEBUG cmd: git config user.name
     DEBUG cmd: git config user.email
 
-    >>> git.execute('status', porcelain=True)
+    sage: git.execute('status', porcelain=True)
     DEBUG cmd: git status --porcelain
     DEBUG stdout: ?? untracked
     '?? untracked\n'
 
-    >>> git.status(porcelain=True)
+    sage: git.status(porcelain=True)
     DEBUG cmd: git status --porcelain
     DEBUG stdout: ?? untracked
     '?? untracked\n'
 
-    >>> git.untracked_files()
+    sage: git.untracked_files()
     DEBUG cmd: git ls-files --exclude-standard --other
     DEBUG stdout: untracked
     ['untracked']
@@ -41,12 +43,21 @@ import subprocess
 
 from sageui.misc.cached_property import cached_property
 
-from git_error import GitError, DetachedHeadError, UserEmailException
+from git_error import GitError, DetachedHeadException, UserEmailException
 
 
 
 
+class GitInterfaceSilentProxy(object):
+    """
+    Execute a git command silently, discarding the output.
+    """
+    def __init__(self, actual_interface):
+        self._interface = actual_interface
 
+    def execute(self, *args, **kwds):
+        self._interface.execute(*args, **kwds)
+        return None  # the "silent" part
 
 
 
@@ -74,6 +85,7 @@ class GitInterface(object):
         self._git_dir = os.path.join(self._work_tree, '.git') if git_dir is None else git_dir
         self._git_cmd = 'git' if git_cmd is None else git_cmd
         self._user_email_set = False
+        self.silent = GitInterfaceSilentProxy(self)
 
     @property
     def git_cmd(self):
@@ -237,7 +249,7 @@ class GitInterface(object):
         # return in reverse order so reset operations are correctly ordered
         return tuple(reversed(ret))
 
-    def reset_to_clean_state(self):
+    def reset_state(self):
         r"""
         Get out of a merge/am/rebase/etc state.
 
@@ -284,7 +296,6 @@ class GitInterface(object):
             sage: git.reset_to_clean_state()
             sage: git.get_state()
             ()
-
         """
         states = self.get_state()
         if not states:
@@ -304,114 +315,6 @@ class GitInterface(object):
             raise RuntimeError("'%s' is not a valid state"%state)
         return self.reset_to_clean_state()
 
-    def reset_to_clean_working_directory(self, remove_untracked_files=False, remove_untracked_directories=False, remove_ignored=False):
-        r"""
-        Reset any changes made to the working directory.
-
-        INPUT:
-
-        - ``remove_untracked_files`` -- a boolean (default: ``False``), whether
-          to remove files which are not tracked by git
-
-        - ``remove_untracked_directories`` -- a boolean (default: ``False``),
-          whether to remove directories which are not tracked by git
-
-        - ``remove_ignored`` -- a boolean (default: ``False``), whether to
-          remove files directories which are ignored by git
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Set up some files/directories::
-
-            sage: os.chdir(config['git']['src'])
-            sage: open('tracked','w').close()
-            sage: git.add(SUPER_SILENT, 'tracked')
-            sage: with open('.gitignore','w') as f: f.write('ignored\nignored_dir')
-            sage: git.add(SUPER_SILENT, '.gitignore')
-            sage: git.commit(SUPER_SILENT, '-m', 'initial commit')
-
-            sage: os.mkdir('untracked_dir')
-            sage: open('untracked_dir/untracked','w').close()
-            sage: open('untracked','w').close()
-            sage: open('ignored','w').close()
-            sage: os.mkdir('ignored_dir')
-            sage: open('ignored_dir/untracked','w').close()
-            sage: with open('tracked','w') as f: f.write('version 0')
-            sage: git.status()
-            # On branch master
-            # Changes not staged for commit:
-            #   (use "git add <file>..." to update what will be committed)
-            #   (use "git checkout -- <file>..." to discard changes in working directory)
-            #
-            #   modified:   tracked
-            #
-            # Untracked files:
-            #   (use "git add <file>..." to include in what will be committed)
-            #
-            #   untracked
-            #   untracked_dir/
-            no changes added to commit (use "git add" and/or "git commit -a")
-
-        Some invalid combinations of flags::
-
-            sage: git.reset_to_clean_working_directory(remove_untracked_files = False, remove_untracked_directories = True)
-            Traceback (most recent call last):
-            ...
-            ValueError: remove_untracked_directories only valid if remove_untracked_files is set
-            sage: git.reset_to_clean_working_directory(remove_untracked_files = False, remove_ignored = True)
-            Traceback (most recent call last):
-            ...
-            ValueError: remove_ignored only valid if remove_untracked_files is set
-
-        Per default only the tracked modified files are reset to a clean
-        state::
-
-            sage: git.reset_to_clean_working_directory()
-            sage: git.status()
-            # On branch master
-            # Untracked files:
-            #   (use "git add <file>..." to include in what will be committed)
-            #
-            #   untracked
-            #   untracked_dir/
-            nothing added to commit but untracked files present (use "git add" to track)
-
-        Untracked items can be removed by setting the parameters::
-
-            sage: git.reset_to_clean_working_directory(remove_untracked_files=True)
-            Removing untracked
-            Not removing untracked_dir/
-            sage: git.reset_to_clean_working_directory(remove_untracked_files=True, remove_untracked_directories=True)
-            Removing untracked_dir/
-            sage: git.reset_to_clean_working_directory(remove_untracked_files=True, remove_ignored=True)
-            Removing ignored
-            Not removing ignored_dir/
-            sage: git.reset_to_clean_working_directory(remove_untracked_files=True, remove_untracked_directories=True, remove_ignored=True)
-            Removing ignored_dir/
-
-        """
-        if remove_untracked_directories and not remove_untracked_files:
-            raise ValueError("remove_untracked_directories only valid if remove_untracked_files is set")
-        if remove_ignored and not remove_untracked_files:
-            raise ValueError("remove_ignored only valid if remove_untracked_files is set")
-
-        self.reset(hard=True)
-
-        if remove_untracked_files:
-            switches = ['-f']
-            if remove_untracked_directories: switches.append("-d")
-            if remove_ignored: switches.append("-x")
-            self.clean(*switches)
-
     def _log(self, prefix, log):
         if self._verbose:
             for line in log.splitlines():
@@ -429,15 +332,13 @@ class GitInterface(object):
 
         - ``kwds`` -- extra keywords for git
 
-        - ``ckwds`` -- Popen like keywords but with the following changes
-
         - ``popen_stdout`` -- Popen-like keywords.
 
         - ``popen_stderr`` -- Popen-like keywords.
         
         OUTPUT:
 
-        Tuple ``(exit_code, stdout, stderr, cmd)``.
+        A dictionary with keys ``exit_code``, ``stdout``, ``stderr``, ``cmd``.
 
         .. WARNING::
 
@@ -445,14 +346,6 @@ class GitInterface(object):
             non-zero exit code.
 
         EXAMPLES::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
 
             sage: git._run_git('status', (), {})
             # On branch master
@@ -463,15 +356,6 @@ class GitInterface(object):
             (0, None, None, 'git status')
             sage: git._run_git('status', (), {}, stdout=False)
             (0, None, None, 'git status')
-
-        TESTS:
-
-        Check that we refuse to touch the live source code in doctests::
-
-            sage: dev.git.status()
-            Traceback (most recent call last):
-            ...
-            AssertionError: possible attempt to work with the live repository/directory in a doctest - did you forget to dev._chdir()?
         """ 
         s = [self.git_cmd, cmd]
         for k, v in kwds.iteritems():
@@ -499,31 +383,25 @@ class GitInterface(object):
             self._log('stdout', stdout)
         if stderr is not None and popen_stderr is subprocess.PIPE:
             self._log('stderr', stderr)
-        return {'rc':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':s}
+        return {'exit_code':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':complete_cmd}
 
     def execute(self, cmd, *args, **kwds):
         r"""
-        Run git.
+        Run git on a command given by a string.
 
         Raises an exception if git has non-zero exit code.
 
         INPUT:
 
-        - ``cmd`` - git command run
+        - ``cmd`` -- string. The git command to run
 
-        - ``args`` - extra arguments for git
+        - ``*args`` -- list of strings. Extra arguments for git.
 
-        - ``kwds`` - extra keywords for git
+        - ``**kwds`` -- keyword arguments. Extra keywords for git. Will be rewritten 
+          such that ``foo='bar'`` becomes the git commandline argument ``--foo='bar'``. 
+          As a special case, ``foo=True`` becomes just ``--foo``.
 
         EXAMPLES::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-            sage: os.chdir(config['git']['src'])
 
             sage: git.execute('status')
             # On branch master
@@ -531,11 +409,10 @@ class GitInterface(object):
             # Initial commit
             #
             nothing to commit (create/copy files and use "git add" to track)
-            sage: git.execute_silent('status',foo=True) # --foo is not a valid parameter
+            sage: git.execute('status', foo=True) # --foo is not a valid parameter
             Traceback (most recent call last):
             ...
             GitError: git returned with non-zero exit code (129)
-
         """
         # not sure which commands could possibly create a commit object with
         # some crazy flags set - these commands should be safe
@@ -544,213 +421,11 @@ class GitInterface(object):
         result = self._run(cmd, args, kwds, 
                            popen_stdout=subprocess.PIPE,
                            popen_stderr=subprocess.PIPE)
-        if result['rc']:
-            raise GitError(result['rc'], result['cmd'], result['stdout'], result['stderr'])
+        if result['exit_code']:
+            raise GitError(result)
         return result['stdout']
 
     __call__ = execute
-    silet = execute
-    supersilent = execute
-    read_output = execute
-
-    def is_child_of(self, a, b):
-        r"""
-        Return whether ``a`` is a child of ``b``.
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create two conflicting branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: with open("file","w") as f: f.write("version 0")
-            sage: git.add("file")
-            sage: git.commit(SUPER_SILENT, "-m","initial commit")
-            sage: git.checkout(SUPER_SILENT, "-b","branch1")
-            sage: with open("file","w") as f: f.write("version 1")
-            sage: git.commit(SUPER_SILENT, "-am","second commit")
-            sage: git.checkout(SUPER_SILENT, "master")
-            sage: git.checkout(SUPER_SILENT, "-b","branch2")
-            sage: with open("file","w") as f: f.write("version 2")
-            sage: git.commit(SUPER_SILENT, "-am","conflicting commit")
-
-            sage: git.is_child_of('master', 'branch2')
-            False
-            sage: git.is_child_of('branch2', 'master')
-            True
-            sage: git.is_child_of('branch1', 'branch2')
-            False
-            sage: git.is_child_of('master', 'master')
-            True
-        """
-        return self.is_ancestor_of(b, a)
-
-    def is_ancestor_of(self, a, b):
-        r"""
-        Return whether ``a`` is an ancestor of ``b``.
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create two conflicting branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: with open("file","w") as f: f.write("version 0")
-            sage: git.add("file")
-            sage: git.commit(SUPER_SILENT, "-m","initial commit")
-            sage: git.checkout(SUPER_SILENT, "-b","branch1")
-            sage: with open("file","w") as f: f.write("version 1")
-            sage: git.commit(SUPER_SILENT, "-am","second commit")
-            sage: git.checkout(SUPER_SILENT, "master")
-            sage: git.checkout(SUPER_SILENT, "-b","branch2")
-            sage: with open("file","w") as f: f.write("version 2")
-            sage: git.commit(SUPER_SILENT, "-am","conflicting commit")
-
-            sage: git.is_ancestor_of('master', 'branch2')
-            True
-            sage: git.is_ancestor_of('branch2', 'master')
-            False
-            sage: git.is_ancestor_of('branch1', 'branch2')
-            False
-            sage: git.is_ancestor_of('master', 'master')
-            True
-        """
-        return not self.rev_list('{}..{}'.format(b, a)).splitlines()
-
-    def untracked_files(self):
-        r"""
-        Return a list of file names for files that are not tracked by git and
-        not ignored.
-
-        EXAMPLES::
-
-            >>> git.untracked_files()
-            DEBUG cmd: git ls-files --exclude-standard --other
-            DEBUG stdout: untracked
-            ['untracked']
-        """
-        return self.read_output('ls-files', other=True, exclude_standard=True).splitlines()
-
-    def commit_for_branch(self, branch):
-        r"""
-        Return the commit id of the local ``branch``, or ``None`` if the branch
-        does not exist
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-        Check existence of branches::
-
-            sage: git.commit_for_branch('branch1') # random output
-            '087e1fdd0fe6f4c596f5db22bc54567b032f5d2b'
-            sage: git.commit_for_branch('branch2') is not None
-            True
-            sage: git.commit_for_branch('branch3') is not None
-            False
-
-        """
-        return self.commit_for_ref("refs/heads/%s"%branch)
-
-    def commit_for_ref(self, ref):
-        r"""
-        Return the commit id of the ``ref``, or ``None`` if the ``ref`` does
-        not exist.
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-        Check existence of branches::
-
-            sage: git.commit_for_ref('refs/heads/branch1') # random output
-            '087e1fdd0fe6f4c596f5db22bc54567b032f5d2b'
-            sage: git.commit_for_ref('refs/heads/branch2') is not None
-            True
-            sage: git.commit_for_ref('refs/heads/branch3') is not None
-            False
-
-        """
-        try:
-            return self.show_ref(ref, hash=True, verify=True).strip()
-        except GitError:
-            return None
-
-    def rename_branch(self, oldname, newname):
-        r"""
-        Rename ``oldname`` to ``newname``.
-
-        EXAMPLES:
-
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-        Rename some branches::
-
-            sage: git.rename_branch('branch1', 'branch3')
-            sage: git.rename_branch('branch2', 'branch3')
-            Traceback (most recent call last):
-            ...
-            GitError: git returned with non-zero exit code (128)
-
-        """
-        self.branch(oldname, newname, move=True)
 
     def _check_user_email(self):
         r"""
@@ -772,13 +447,12 @@ class GitInterface(object):
             sage: UI.append("Doc Test")
             sage: UI.append("doc@test")
             sage: git._check_user_email()
-
         """
         if self._user_email_set:
             return
         name = self._run('config', ['user.name'], popen_stdout=open('/dev/null', 'wb'))
         email = self._run('config', ['user.email'], popen_stdout=open('/dev/null', 'wb'))
-        if (name['rc'] == 0) and (email['rc'] == 0):
+        if (name['exit_code'] == 0) and (email['exit_code'] == 0):
             self._user_email_set = True
         else:
             raise UserEmailException()
@@ -805,6 +479,7 @@ git_commands = (
     "grep",
     "init",
     "log",
+    "ls_files",
     "ls_remote",
     "merge",
     "mv",
@@ -847,3 +522,4 @@ def create_wrapper(git_cmd_underscore):
 
 for command in git_commands:
     setattr(GitInterface, command, create_wrapper(command))
+    setattr(GitInterfaceSilentProxy, command, create_wrapper(command))

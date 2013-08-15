@@ -8,8 +8,8 @@ Python objects.
 The managed branches are all named `sageui/1234/u/user/description`.
 """
 
-from git_error import GitError
-from git_branch import GitLocalBranch, GitManagedBranch
+from git_error import GitError, DetachedHeadException
+from git_branch import GitBranch
 from git_interface import GitInterface
 
 from sageui.misc.cached_property import cached_property
@@ -40,6 +40,18 @@ class GitRepository(object):
     def git(self):
         return GitInterface(self.repo_path, verbose=self._verbose)
 
+    def untracked_files(self):
+        r"""
+        Return a list of file names for files that are not tracked by git and
+        not ignored.
+
+        EXAMPLES::
+
+            >>> repo.untracked_files()
+            ['untracked']
+        """
+        return self.git.ls_files(other=True, exclude_standard=True).splitlines()
+
     def checkout_branch(self, branch_name, ticket_number=None):
         branch = GitManagedBranch(self, branch_name, ticket_number)
         return branch
@@ -48,35 +60,22 @@ class GitRepository(object):
         """
         Return the list of local branches
 
+        Output is in descending age of commits
+
         EXAMPLES::
 
-            >>> repo.local_branches()
+            sage: repo.local_branches()
             [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
         """
         branches = self.git.for_each_ref(
-            'refs/heads/', sort='committerdate', format="%(objectname)%(refname:short)")
+            'refs/heads/', sort='committerdate', format="%(objectname) %(refname:short)")
         result = []
         for line in branches.splitlines():
             commit = line[0:40]
-            name = line[40:]
-            if '/' not in name:
-                branch = GitLocalBranch(self, name, commit)
+            name = line[41:]
+            branch = GitBranch(self, name, commit)
+            if branch:
                 result.append(branch)
-            elif name.startswith(self.prefix_nonumber+'/'):
-                description = name[len(self.prefix_nonumber)+1:]
-                branch = GitManagedBranch(self, description, commit, None)
-                result.append(branch)
-            elif name.startswith(self.prefix+'/'):
-                start = len(self.prefix) + 1
-                end = name.find('/', start)
-                number = name[start:end]
-                description = name[end+1:]
-                try:
-                    number = int(number)
-                    branch = GitManagedBranch(self, description, commit, number)
-                    result.append(branch)
-                except ValueError:
-                    pass
         return result
 
     def current_branch(self):
@@ -85,43 +84,54 @@ class GitRepository(object):
 
         EXAMPLES:
 
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create some branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: git.commit(SILENT, '-m','initial commit','--allow-empty')
-            sage: git.commit(SILENT, '-m','second commit','--allow-empty')
-            sage: git.branch('branch1')
-            sage: git.branch('branch2')
-
-            sage: git.current_branch()
-            'master'
-            sage: git.checkout(SUPER_SILENT, 'branch1')
-            sage: git.current_branch()
-            'branch1'
+            sage: repo.current_branch()
+            Git branch sageui/1002/public/anything
 
         If ``HEAD`` is detached::
 
-            sage: git.checkout(SUPER_SILENT, 'master~')
-            sage: git.current_branch()
+            sage: repo.git.silent.checkout('HEAD~')
+            sage: repo.current_branch()
             Traceback (most recent call last):
             ...
-            DetachedHeadError: unexpectedly, git is in a detached HEAD state
-
+            DetachedHeadException: unexpectedly, git is in a detached HEAD state
+            sage: repo.git.silent.checkout('master')
         """
         try:
-            return self.symbolic_ref('HEAD', short=True, quiet=True).strip()
+            branch_string = self.git.symbolic_ref('HEAD', short=True, quiet=True).strip()
         except GitError as e:
             if e.exit_code == 1:
-               raise DetachedHeadError()
+               raise DetachedHeadException()
             raise
+        return GitBranch(self, branch_string)
 
+
+
+    def rename_branch(self, oldname, newname):
+        r"""
+        Rename ``oldname`` to ``newname``.
+
+        EXAMPLES:
+
+        Create some branches::
+
+            sage: repo.git.silent.branch('branch1')
+            sage: repo.git.silent.branch('branch2')
+
+        Rename some branches::
+
+            sage: repo.rename_branch('branch1', 'branch3')
+            sage: repo.rename_branch('branch2', 'branch3')
+            Traceback (most recent call last):
+            ...
+            GitError: git returned with non-zero exit code (128) when executing "git branch --move branch2 branch3"
+                STDOUT: 
+                STDERR: fatal: A branch named 'branch3' already exists.
+
+        Cleanup::
+
+            sage: repo.git.silent.checkout('master')
+            sage: repo.git.silent.branch('branch2', d=True)
+            sage: repo.git.silent.branch('branch3', d=True)
+        """
+        self.git.branch(oldname, newname, move=True)
 

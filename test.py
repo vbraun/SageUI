@@ -7,17 +7,31 @@ import tempfile
 import shutil
 import subprocess
 import logging
+import importlib
 
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
+from sageui.test.doctest_parser import SageDocTestParser, SageOutputChecker
+
+def testmod(module, globs={}):
+    if isinstance(module, basestring):
+        module = importlib.import_module(module)
+    parser = SageDocTestParser(long=True, optional_tags=('sage',))
+    finder = doctest.DocTestFinder(parser=parser)
+    checker = SageOutputChecker()
+    opts = doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS
+    runner = doctest.DocTestRunner(checker=checker, optionflags=opts)
+    for test in finder.find(module):
+        test.globs.update(globs)
+        runner.run(test)
+
+testmod('sageui.test.doctest_parser')
+ 
 
 def test_trac_model():
-    import sageui.model.trac_ticket
-    import sageui.model.trac_database
-    import sageui.model.trac_server
-    doctest.testmod(sageui.model.trac_ticket)
-    doctest.testmod(sageui.model.trac_database)
-    doctest.testmod(sageui.model.trac_server)
+    testmod('sageui.model.trac_ticket')
+    testmod('sageui.model.trac_database')
+    testmod('sageui.model.trac_server')
     
 
 POPULATE_GIT_REPO = """
@@ -48,33 +62,20 @@ def make_test_git_repo(temp_dir):
     finally:
         os.chdir(cwd)
 
-class MultiLineFormatter(logging.Formatter):
-    def format(self, record):
-        str = logging.Formatter.format(self, record)
-        header, footer = str.split(record.message)
-        str = str.replace('\n', '\n' + ' '*len(header))
-        return str
-        
 def test_git_model():
-    import sageui.model.git_branch
+    testmod('sageui.model.git_error')
     import sageui.model.git_repository
-    import sageui.model.git_interface
-    #handler = logging.StreamHandler(sys.stdout)
-    #handler.setLevel(logging.DEBUG)
-    #handler.setFormatter(MultiLineFormatter('%(name)s:%(levelname)s %(message)s'))
-    #sageui.model.git_interface.log.addHandler(handler)
-    #sageui.model.git_interface.log.setLevel(logging.DEBUG)
     temp_dir = tempfile.mkdtemp()
     repo_path = os.path.join(temp_dir, 'git_repo')
     try:
         make_test_git_repo(repo_path)
         repo = sageui.model.git_repository.GitRepository(repo_path)
         repo.git._user_email_set = True
-        doctest.testmod(sageui.model.git_branch, globs={'repo':repo})
-        doctest.testmod(sageui.model.git_repository, globs={'repo':repo})
+        testmod('sageui.model.git_branch', globs={'repo':repo})
+        testmod('sageui.model.git_repository', globs={'repo':repo})
         repo = sageui.model.git_repository.GitRepository(repo_path, verbose=True)
         repo.git._user_email_set = False
-        doctest.testmod(sageui.model.git_interface, globs={'git':repo.git})
+        #testmod('sageui.model.git_interface', globs={'git':repo.git})
     finally:
         shutil.rmtree(temp_dir)
 
