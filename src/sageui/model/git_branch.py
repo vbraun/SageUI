@@ -5,7 +5,8 @@ In fact, a particular commit on a branch.
 
 EXAMPLES::
 
-    >>> repo.local_branches()
+    sage: repo = test.git_repo()
+    sage: repo.local_branches()
     [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
 
 
@@ -24,12 +25,12 @@ def GitBranch(git_repository, name, commit=None):
     prefix_nonumber = git_repository.prefix_nonumber
     if '/' not in name:
         return GitLocalBranch(git_repository, name, commit)
-    elif name.startswith(prefix_nonumber+'/'):
-        description = name[len(prefix_nonumber)+1:]
+    elif name.startswith(prefix_nonumber):
+        description = name[len(prefix_nonumber):]
         return GitManagedBranch(git_repository, description, None, commit)
-    elif name.startswith(prefix+'/'):
-        start = len(prefix) + 1
-        end = name.find('/', start)
+    elif name.startswith(prefix):
+        start = len(prefix)
+        end = name.find('/', start+1)
         number = name[start:end]
         description = name[end+1:]
         try:
@@ -75,7 +76,7 @@ class GitBranchABC(object):
 
         EXAMPLES::
 
-            sage: b = repo.current_branch()
+            sage: b = test.git_repo().current_branch()
             sage: b.commit    # random output
             '087e1fdd0fe6f4c596f5db22bc54567b032f5d2b'
         """
@@ -138,5 +139,5 @@ class GitManagedBranch(GitBranchABC):
     def full_branch_name(self):
         prefix = self.repository.prefix
         number = self.ticket_string
-        return '{0}/{1}/{2}'.format(prefix, number, self.name)
+        return '{0}{1}/{2}'.format(prefix, number, self.name)
 

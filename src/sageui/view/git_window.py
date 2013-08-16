@@ -39,7 +39,7 @@ class GitWindow(Buildable, Window):
         self.repo_path = None
         self._branch_names = []
         self._current_branch = None
-        self._set_ticket_number(None)
+        self.set_ticket_number(None)
 
     def _init_branch(self, view, store):
         branch = view.get_cells()[0]
@@ -72,7 +72,7 @@ class GitWindow(Buildable, Window):
         self.base_store.clear()
         self.diff.get_buffer().set_text('')
 
-    def set_branches(self, local_branches, current_branch):
+    def set_branches(self, local_branches, current_branch=None):
         self.branch_store.clear()
         self._branch_names = []
         active = None
@@ -84,10 +84,10 @@ class GitWindow(Buildable, Window):
             if branch == current_branch:
                 active = i
         self._current_branch = None
-        self.branch_entry.set_active(active)
-        self._set_ticket_number(current_branch.ticket_number)
+        if current_branch is not None:
+            self.branch_entry.set_active(active)
 
-    def _set_ticket_number(self, ticket_number=None):
+    def set_ticket_number(self, ticket_number=None):
         self.ticket_number = ticket_number
         number = self.toolbar_ticket.get_child()
         if ticket_number is None:
@@ -98,8 +98,10 @@ class GitWindow(Buildable, Window):
             number.set_label(number_string)
             self.toolbar_ticket.set_sensitive(True)
 
-    def set_bases(self, git_commit_list):
+    def set_bases(self, git_commit_list=None):
         self.base_store.clear()
+        if git_commit_list is None:
+            return
         for c in git_commit_list:
             #print c, c.title, c.sha1
             self.base_store.append([c.title, c.short_sha1])

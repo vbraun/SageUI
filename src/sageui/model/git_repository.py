@@ -27,14 +27,14 @@ class GitRepository(object):
         """
         The prefix for managed local branches
         """
-        return 'sageui'
+        return 'sageui/'
 
     @property
     def prefix_nonumber(self):
         """
         The prefix for managed local branches that have no ticket number
         """
-        return 'sageui/none'
+        return 'sageui/none/'
 
     @cached_property
     def git(self):
@@ -54,17 +54,34 @@ class GitRepository(object):
 
         EXAMPLES::
 
-            >>> repo.untracked_files()
+            sage: repo = test.git_repo()
+            sage: repo.untracked_files()
             ['untracked']
         """
         return self.git.ls_files(other=True, exclude_standard=True).splitlines()
 
     def checkout_branch(self, branch_name, ticket_number=None):
+        """
+        Check out branch.
+
+        This modifies the working directory.
+
+        EXAMPLES::
+
+            sage: repo = test.new_git_repo()
+            sage: repo.current_branch()
+            Git branch sageui/1002/public/anything
+            sage: repo.checkout_branch('u/user/description')
+            Git branch sageui/none/u/user/description
+            sage: _ == repo.current_branch()
+            True
+        """
         if '/' in branch_name:
             branch = GitManagedBranch(self, branch_name, ticket_number)
         else:
             branch = GitLocalBranch(self, branch_name)
         assert branch is not None
+        self.git.checkout(branch.full_branch_name)
         return branch
 
     def local_branches(self):
@@ -75,6 +92,7 @@ class GitRepository(object):
 
         EXAMPLES::
 
+            sage: repo = test.git_repo()
             sage: repo.local_branches()
             [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
         """
@@ -95,6 +113,7 @@ class GitRepository(object):
 
         EXAMPLES:
 
+            sage: repo = test.new_git_repo()
             sage: repo.current_branch()
             Git branch sageui/1002/public/anything
 
@@ -115,8 +134,6 @@ class GitRepository(object):
             raise
         return GitBranch(self, branch_string)
 
-
-
     def rename_branch(self, oldname, newname):
         r"""
         Rename ``oldname`` to ``newname``.
@@ -125,6 +142,7 @@ class GitRepository(object):
 
         Create some branches::
 
+            sage: repo = test.new_git_repo()
             sage: repo.git.silent.branch('branch1')
             sage: repo.git.silent.branch('branch2')
 
@@ -137,12 +155,34 @@ class GitRepository(object):
             GitError: git returned with non-zero exit code (128) when executing "git branch --move branch2 branch3"
                 STDOUT: 
                 STDERR: fatal: A branch named 'branch3' already exists.
-
-        Cleanup::
-
-            sage: repo.git.silent.checkout('master')
-            sage: repo.git.silent.branch('branch2', d=True)
-            sage: repo.git.silent.branch('branch3', d=True)
         """
         self.git.branch(oldname, newname, move=True)
 
+    def diff(self, from_commit, to_commit):
+        """
+        List the changed files between the two commits
+
+            sage: repo = test.git_repo()
+            sage: branch = repo.current_branch()
+            sage: history = branch.commit.get_parents()
+            sage: history
+            [Commit ..., Commit ..., Commit ...]
+            sage: repo.diff(history[-1], history[0])
+            ['1', '0', 'bar/foo6.txt']
+            ['1', '0', 'foo2.txt']
+            ['1', '0', 'foo3.txt']
+            ['1', '0', 'foo4.txt']
+            ['1', '0', 'foo5.txt']
+        """
+        log = self.git.diff(from_commit, to_commit, numstat=True, z=True)
+        for line in log.split('\0'):
+            if line == '':  # two nulls is the end marker
+                break
+            print line.split('\t')
+        
+
+    def changes_since(self, commit):
+        """
+        List all changes since (and including) commit
+        """
+        

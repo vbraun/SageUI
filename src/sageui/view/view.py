@@ -105,9 +105,15 @@ class View(object):
         self._open_windows.remove(self.git_window)
 
     def set_git_branches(self, local_branches, current_branch=None):
-        assert current_branch in local_branches
+        print local_branches, current_branch
+        assert (current_branch) is None or (current_branch in local_branches)
         self.git_window.set_branches(local_branches, current_branch)
-        self.git_window.set_bases(current_branch.commit.get_parents())
+        if current_branch is None:
+            self.git_window.set_bases(None)
+            self.git_window.set_ticket_number(None)
+        else:
+            self.git_window.set_bases(current_branch.commit.get_parents())
+            self.git_window.set_ticket_number(current_branch.ticket_number)
 
     ###################################################################
     # The about dialog
