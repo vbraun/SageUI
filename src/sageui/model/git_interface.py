@@ -394,7 +394,16 @@ class GitInterface(object):
         env = dict(os.environ)
         env['GIT_DIR'] = self.git_dir
         env['GIT_WORK_TREE'] = self.work_tree
-        process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
+        if cmd == 'stash':
+            # bug
+            try:
+                cwd = os.getcwd()
+                os.chdir(self.work_tree)
+                process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
+            finally:
+                os.chdir(cwd)
+        else:
+            process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
         stdout, stderr = process.communicate()
         retcode = process.poll()
         if stdout is not None and popen_stdout is subprocess.PIPE:

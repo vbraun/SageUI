@@ -11,8 +11,6 @@ class GitError(RuntimeError):
         Traceback (most recent call last):
         ...
         GitError: git returned with non-zero exit code (128) when executing "command"
-            STDOUT: 
-            STDERR: 
     """
     def __init__(self, result, explain=None, advice=None):
         r"""
@@ -25,13 +23,20 @@ class GitError(RuntimeError):
             <class 'sageui.model.git_error.GitError'>
         """
         self.exit_code = result['exit_code']
-        self.cmd = result['cmd']
-        self.stdout = result['stdout']
-        self.stderr = result['stderr']
+        self.cmd = result['cmd'].strip()
+        def prefix(string, prefix):
+            return '\n'.join([prefix + ': ' + line.rstrip() for line in string.splitlines()])
+        self.stdout = prefix(result['stdout'], '    STDOUT')
+        self.stderr = prefix(result['stderr'], '    STDERR')
         self.explain = explain
         self.advice = advice
-        template = 'git returned with non-zero exit code ({}) when executing "{}"\n    STDOUT: {}\n    STDERR: {}'
-        RuntimeError.__init__(self, template.format(self.exit_code, self.cmd, self.stdout, self.stderr))
+        template = 'git returned with non-zero exit code ({}) when executing "{}"'
+        msg = template.format(self.exit_code, self.cmd)
+        if len(self.stdout) != 0:
+            msg += '\n' + self.stdout
+        if len(self.stderr) != 0:
+            msg += '\n' + self.stderr
+        RuntimeError.__init__(self, msg)
 
 
 class DetachedHeadException(RuntimeError):

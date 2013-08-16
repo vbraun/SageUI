@@ -36,6 +36,7 @@ def test_git_model():
     testmod('sageui.model.git_error')
     from sageui.test.test_builder import TestBuilder
     test = TestBuilder()
+    testmod('sageui.model.git_commit', globs={'test':test})
     testmod('sageui.model.git_branch', globs={'test':test})
     testmod('sageui.model.git_repository', globs={'test':test})
     #repo = sageui.model.git_repository.GitRepository(repo_path, verbose=True)

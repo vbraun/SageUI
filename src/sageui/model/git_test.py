@@ -8,7 +8,10 @@ echo '123' > foo1.txt && git add . && git commit -m 'initial commit'
 git checkout -q -b 'my_branch'
 echo '234' > foo2.txt && git add . && git commit -m 'second commit'
 git checkout -q -b 'sageui/none/u/user/description'
-echo '345' > foo3.txt && git add . && git commit -m 'third commit'
+echo '345' > foo3.txt
+mv foo2.txt foo2_moved.txt 
+git add --all
+git commit -m 'third commit'
 git checkout -q -b 'sageui/1000/u/user/description'
 echo '456' > foo4.txt && git add . && git commit -m 'fourth commit'
 git checkout -q -b 'sageui/1001/u/bob/work'
@@ -16,8 +19,9 @@ echo '567' > foo5.txt && git add . && git commit -m 'fifth commit'
 git checkout -q -b 'sageui/1001/u/alice/work'
 mkdir 'bar' && echo '678' > bar/foo6.txt && git add bar && git commit -m 'sixth commit'
 git checkout -q -b 'sageui/1002/public/anything'
-touch staged && git add staged
-touch untracked
+touch staged_file && git add staged_file
+echo 'another line' >> foo4.txt
+touch untracked_file
 """
 
 import os

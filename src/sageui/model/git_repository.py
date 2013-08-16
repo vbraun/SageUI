@@ -8,10 +8,11 @@ Python objects.
 The managed branches are all named `sageui/1234/u/user/description`.
 """
 
+from git_commit import GitCommit
 from git_error import GitError, DetachedHeadException
 from git_branch import GitBranch, GitLocalBranch, GitManagedBranch
 from git_interface import GitInterface
-
+from git_file import GitFileDiff, GitFileCommitted, GitFileStaged, GitFileUnstaged, GitFileUntracked
 from sageui.misc.cached_property import cached_property
 
 
@@ -21,6 +22,7 @@ class GitRepository(object):
     def __init__(self, repo_path, verbose=False):
         self.repo_path = repo_path
         self._verbose = verbose
+        self._base_commit = None
 
     @property
     def prefix(self):
@@ -43,6 +45,42 @@ class GitRepository(object):
     @property
     def master(self):
         return GitLocalBranch(self, 'master')
+    
+    @property
+    def build_system(self):
+        return GitLocalBranch(self, 'build_system')
+    
+    @property
+    def head(self):
+        head = self.git.show_ref('HEAD', head=True)
+        return GitCommit(self, head[0:40])
+
+    @property
+    def base_commit(self):
+        """
+        A commit relative to which changes are displayed.
+
+        See :meth:`changes`
+        
+        EXAMPLES::
+
+            sage: repo = test.git_repo()
+            sage: repo.base_commit
+            Commit ...
+            sage: repo.base_commit == repo.head
+            True 
+        """
+        if self._base_commit is None:
+            self._base_commit = self.head
+        return self._base_commit
+
+    @base_commit.setter
+    def base_commit(self, commit):
+        if isinstance(commit, GitCommit):
+            assert commit.repository is self
+            self._base_commit = commit
+        else:
+            self._base_commit = GitCommit(self, commit)
 
     def get_branch(self, branch_name):
         return GitBranch(self, branch_name)
@@ -56,9 +94,15 @@ class GitRepository(object):
 
             sage: repo = test.git_repo()
             sage: repo.untracked_files()
-            ['untracked']
+            [untracked:untracked_file]
         """
-        return self.git.ls_files(other=True, exclude_standard=True).splitlines()
+        log = self.git.ls_files(others=True, exclude_standard=True, z=True)
+        result = []
+        for line in log.split('\0'):
+            if line == '':  # two nulls is the end marker
+                break
+            result.append(GitFileUntracked(self, line))
+        return result
 
     def checkout_branch(self, branch_name, ticket_number=None):
         """
@@ -68,7 +112,7 @@ class GitRepository(object):
 
         EXAMPLES::
 
-            sage: repo = test.new_git_repo()
+            sage: repo = test.new_git_repo();  repo.git.silent.stash()
             sage: repo.current_branch()
             Git branch sageui/1002/public/anything
             sage: repo.checkout_branch('u/user/description')
@@ -82,6 +126,7 @@ class GitRepository(object):
             branch = GitLocalBranch(self, branch_name)
         assert branch is not None
         self.git.checkout(branch.full_branch_name)
+        self._base_commit = None
         return branch
 
     def local_branches(self):
@@ -119,7 +164,7 @@ class GitRepository(object):
 
         If ``HEAD`` is detached::
 
-            sage: repo.git.silent.checkout('HEAD~')
+            sage: repo.git.silent.stash(); repo.git.silent.checkout('HEAD~')
             sage: repo.current_branch()
             Traceback (most recent call last):
             ...
@@ -153,36 +198,72 @@ class GitRepository(object):
             Traceback (most recent call last):
             ...
             GitError: git returned with non-zero exit code (128) when executing "git branch --move branch2 branch3"
-                STDOUT: 
                 STDERR: fatal: A branch named 'branch3' already exists.
         """
         self.git.branch(oldname, newname, move=True)
 
-    def diff(self, from_commit, to_commit):
+    def diff_index(self, from_commit, to_commit):
         """
         List the changed files between the two commits
 
             sage: repo = test.git_repo()
             sage: branch = repo.current_branch()
-            sage: history = branch.commit.get_parents()
+            sage: history = branch.commit.get_history()
             sage: history
             [Commit ..., Commit ..., Commit ...]
-            sage: repo.diff(history[-1], history[0])
-            ['1', '0', 'bar/foo6.txt']
-            ['1', '0', 'foo2.txt']
-            ['1', '0', 'foo3.txt']
-            ['1', '0', 'foo4.txt']
-            ['1', '0', 'foo5.txt']
+            sage: repo.diff_index(history[-1], history[0])
+            [diff_index:+1-0:bar/foo6.txt, diff_index:+1-0:foo2_moved.txt, diff_index:+1-0:foo3.txt, diff_index:+1-0:foo4.txt, diff_index:+1-0:foo5.txt]
         """
         log = self.git.diff(from_commit, to_commit, numstat=True, z=True)
+        result = []
         for line in log.split('\0'):
             if line == '':  # two nulls is the end marker
                 break
-            print line.split('\t')
-        
+            line = line.split('\t')
+            f = GitFileDiff(self, int(line[0]), int(line[1]), line[-1], from_commit, to_commit)
+            result.append(f)
+        return result
 
-    def changes_since(self, commit):
+    def changes(self):
         """
-        List all changes since (and including) commit
-        """
+        List all changes since (and including) :meth:`base_commit`
         
+        Note that a file can be both changed in git history and 
+        staged/unstaged. The latter takes precedence.
+
+        EXAMPLES::
+        
+            sage: repo = test.git_repo() 
+            sage: repo.base_commit = repo.head.get_history()[-1]
+            sage: repo.changes()
+            [diff:+1-0:bar/foo6.txt, diff:+1-0:foo2_moved.txt, diff:+1-0:foo3.txt, unstaged:+1-0:foo4.txt, diff:+1-0:foo5.txt, staged:+0-0:staged_file, untracked:untracked_file]
+        """
+        files = dict()
+        log = self.git.diff(self.base_commit, cached=True, numstat=True, z=True)
+        for line in log.split('\0'):
+            if line == '':  # two nulls is the end marker
+                break
+            line = line.split('\t')
+            name = line[-1]
+            files[name] = GitFileCommitted(self, int(line[0]), int(line[1]), line[-1], self.base_commit) 
+        log = self.git.status(z=True)
+        for line in log.split('\0'):
+            if line == '':  # two nulls is the end marker
+                break
+            status = line[0:2]
+            status_unstaged = line[1]
+            status_staged = line[0]
+            name = line[3:]
+            blank = ' '
+            if status == '??':
+                files[name] = GitFileUntracked(self, name)
+            elif status_unstaged != blank:
+                f = files[name]
+                files[name] = GitFileUnstaged(self, f.added, f.subed, f.name, f.commit)
+            elif status_staged != blank:
+                f = files[name]
+                files[name] = GitFileStaged(self, f.added, f.subed, f.name, f.commit)
+            else:
+                raise ValueError('unknown status '+status)
+        return [files[name] for name in sorted(files.keys())]
+
