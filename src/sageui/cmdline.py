@@ -5,33 +5,37 @@ Handle Command Line Options and Launch the Sage UI
 import sys
 import os
 import importlib
+import logging
+
+
+
 
 def check_gui_prerequisites():
     try:
         import gtk
     except ImportError:
-        print 'Fatal: You need the Python GTK interface!'
+        logging.critical('You need the Python GTK interface!')
         sys.exit(1)
     try:
         import pygtk
         pygtk.require('2.0')
     except ImportError:
-        print 'Fatal: You need PyGTK version 2 or higher!'
+        logging.critical('You need PyGTK version 2 or higher!')
         sys.exit(1)
     try:
         import gtk.glade
     except ImportError:
-        print 'Fatal: You need the Python Glade interface!'
+        logging.critical('You need the Python Glade interface!')
         sys.exit(1)
     try:
         import cairo
     except ImportError:
-        print 'Fatal: You need the Python Cairo interface!'
+        logging.critical('You need the Python Cairo interface!')
         sys.exit(1)
     try: 
         import vte
     except ImportError:
-        print 'Fatal: You need VTE!'
+        logging.critical('You need VTE!')
         sys.exit(1)
 
 
@@ -85,7 +89,12 @@ def launch():
     parser.add_argument('--doctest', dest='doctest', action='store_true',
                         default=False, 
                         help='doctest')
+    parser.add_argument('--log', dest='log', default=None,
+                        help='one of [DEBUG, INFO, ERROR, WARNING, CRITICAL]')
     args = parser.parse_args()
+    if args.log is not None:
+        level = getattr(logging, args.log)
+        logging.basicConfig(level=level)
     if args.doctest:
         run_doctests(args)
     else:

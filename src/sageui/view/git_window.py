@@ -8,6 +8,8 @@ import pango
 from window import Window
 from buildable import Buildable
 
+import logging
+
 
 class GitWindow(Buildable, Window):
 
@@ -31,14 +33,16 @@ class GitWindow(Buildable, Window):
         self._init_branch(self.branch_entry, self.branch_store)
         self.files_view = builder.get_object('git_files_view')
         self.files_store = builder.get_object('git_files_store')
+        self._init_files(self.files_view, self.files_store)
         self.base_view = builder.get_object('git_base_view')
         self.base_store = builder.get_object('git_base_store')
         self._init_base(self.base_view, self.base_store)
         self.diff = builder.get_object('git_diff')
         builder.connect_signals(self)
         self.repo_path = None
-        self._branch_names = []
-        self._current_branch = None
+        # Note that the ComboBoxes activate the "change" callback even if using set_active()
+        self._branch_entry_ignore_next_change = False
+        self._base_view_ignore_next_change = False
         self.set_ticket_number(None)
 
     def _init_branch(self, view, store):
@@ -56,9 +60,20 @@ class GitWindow(Buildable, Window):
         name = gtk.CellRendererText()
         view.pack_start(name, expand=True)
         view.add_attribute(name, 'text', 0)  
-        #sha1 = gtk.CellRendererText()
-        #view.pack_end(sha1, expand=False)
-        #view.add_attribute(sha1, 'text', 1)  
+
+    def _init_files(self, view, store):
+        view.get_selection().set_mode(gtk.SELECTION_BROWSE)
+        col = gtk.TreeViewColumn('Changed files')
+        view.append_column(col)
+        name = gtk.CellRendererText()
+        name.set_property('ellipsize', pango.ELLIPSIZE_MIDDLE)
+        desc = gtk.CellRendererText()
+        desc.set_property('ellipsize', pango.ELLIPSIZE_MIDDLE)
+        col.pack_start(name, expand=True)
+        col.add_attribute(name, 'text', 1)  
+        col.pack_end(desc, expand=False)
+        col.add_attribute(name, 'text', 2)  
+        
 
     @property
     def prefix(self):
@@ -73,18 +88,18 @@ class GitWindow(Buildable, Window):
         self.diff.get_buffer().set_text('')
 
     def set_branches(self, local_branches, current_branch=None):
+        self.branch_entry.set_model(None)
         self.branch_store.clear()
-        self._branch_names = []
         active = None
         for i, branch in enumerate(local_branches):
             n = branch.ticket_number
             number_string = 'Trac #{0}'.format(n)
             self.branch_store.append([i, branch.name, number_string, n])
-            self._branch_names.append(branch.name)
             if branch == current_branch:
                 active = i
-        self._current_branch = None
+        self.branch_entry.set_model(self.branch_store)
         if current_branch is not None:
+            self._branch_entry_ignore_next_change = True
             self.branch_entry.set_active(active)
 
     def set_ticket_number(self, ticket_number=None):
@@ -98,31 +113,52 @@ class GitWindow(Buildable, Window):
             number.set_label(number_string)
             self.toolbar_ticket.set_sensitive(True)
 
-    def set_bases(self, git_commit_list=None):
+    def set_bases_list(self, git_commit_list=None):
+        self.base_view.set_model(None)
         self.base_store.clear()
         if git_commit_list is None:
             return
         for c in git_commit_list:
             #print c, c.title, c.sha1
-            self.base_store.append([c.title, c.short_sha1])
+            self.base_store.append([c.title, c.short_sha1, c])
+        self.base_view.set_model(self.base_store)
+        self._base_view_ignore_next_change = True
         self.base_view.set_active(0)
 
-    def set_change_files(self, git_file_status_list):
+    def set_base(self, git_commit):
         pass
 
+    def set_changed_files(self, git_file_status_list):
+        self.files_view.set_model(None)
+        self.files_store.clear()
+        for git_file in git_file_status_list:
+            # print git_file.name
+            self.files_store.append([None, git_file.name, git_file.type])
+        self.files_view.set_model(self.files_store)
+            
     def set_diff(self, diff):
         pass
 
     def on_git_branch_entry_changed(self, widget, data=None):
         n = self.branch_entry.get_active()
-        if n == -1:
+        if self._branch_entry_ignore_next_change:
+            self._branch_entry_ignore_next_change=False
             return
+        logging.info('git branch_entry changed %s', n)
         index, name, number_str, number = self.branch_store[n]
-        if self._current_branch is None:   
-            # callback is activated once at the beginning
-            self._current_branch = (name, number)
-        else:
-            self.presenter.checkout_branch(name, number)
+        self.presenter.checkout_branch(name, number)
+
+    def on_git_base_view_changed(self, widget, data=None):
+        if self._base_view_ignore_next_change:
+            self._base_view_ignore_next_change = False
+            return
+        n = self.base_view.get_active()
+        logging.info('git base_view changed %s', n)
+        commit = self.base_store[n][2]
+        self.presenter.base_commit_selected(commit)
+    
+    def on_git_files_view_cursor_changed(self, widget, data=None):
+        print 'cursor changed', widget, data
 
     def on_git_window_realize(self, widget, data=None):
         self.presenter.show_current_branch()

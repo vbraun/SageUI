@@ -38,7 +38,8 @@ class GitFileCommitted(GitFileABC):
     under version control already.
     """
     
-    def __init__(self, repository, lines_added, lines_subtracted, filename, commit):
+    def __init__(self, repository, lines_added, lines_subtracted, filename, commit, binary=False):
+        self.binary = binary
         self.commit = commit
         self.added = lines_added
         self.subed = lines_subtracted
@@ -49,7 +50,10 @@ class GitFileCommitted(GitFileABC):
         return 'diff'
     
     def __repr__(self):
-        return self.type + ':+' + str(self.added) + '-' + str(self.subed) + ':' + self.name
+        if self.binary:
+            return self.type + ':' + self.name
+        else:
+            return self.type + ':+' + str(self.added) + '-' + str(self.subed) + ':' + self.name
 
 
 class GitFileDiff(GitFileCommitted):
@@ -57,12 +61,13 @@ class GitFileDiff(GitFileCommitted):
     Diff from/to for a file.
     """
     
-    def __init__(self, repository, lines_added, lines_subtracted, filename, from_commit, to_commit):
+    def __init__(self, repository, lines_added, lines_subtracted, filename, from_commit, to_commit, binary=False):
         self.added = lines_added
         self.subed = lines_subtracted
         self.from_commit = from_commit
         self.to_commit = to_commit
-        super(GitFileDiff, self).__init__(repository, lines_added, lines_subtracted, filename, from_commit)
+        super(GitFileDiff, self).__init__(repository, lines_added, lines_subtracted, filename, 
+                                          from_commit, binary=binary)
         
     @property
     def type(self):
@@ -89,4 +94,6 @@ class GitFileStaged(GitFileCommitted):
     def type(self):
         return 'staged'
     
+
+
 

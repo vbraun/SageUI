@@ -62,6 +62,12 @@ class Presenter(object):
         branches = self.model.list_branches()
         self.view.set_git_branches(branches, branch)
 
+    def base_commit_selected(self, base_commit):
+        repo = self.model.repo
+        repo.base_commit = base_commit
+        self.view.set_git_base_commit(repo.base_commit, repo.changes())
+
+
     ###################################################################
     # Preferences dialog
 

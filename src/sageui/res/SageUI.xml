@@ -332,6 +332,8 @@
       <column type="gchararray"/>
       <!-- column-name summary -->
       <column type="gchararray"/>
+      <!-- column-name GitCommit -->
+      <column type="PyObject"/>
     </columns>
   </object>
   <object class="GtkListStore" id="git_branch_store">
@@ -673,10 +675,19 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkTreeView" id="git_files_view">
+                  <object class="GtkScrolledWindow" id="scrolledwindow2">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="model">git_files_store</property>
+                    <property name="hscrollbar_policy">automatic</property>
+                    <property name="vscrollbar_policy">automatic</property>
+                    <child>
+                      <object class="GtkTreeView" id="git_files_view">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">git_files_store</property>
+                        <signal name="cursor-changed" handler="on_git_files_view_cursor_changed" swapped="no"/>
+                      </object>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -689,6 +700,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="model">git_base_store</property>
+                    <signal name="changed" handler="on_git_base_view_changed" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1137,6 +1149,12 @@
     <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
     <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
     <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

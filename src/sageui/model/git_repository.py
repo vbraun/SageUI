@@ -245,7 +245,11 @@ class GitRepository(object):
                 break
             line = line.split('\t')
             name = line[-1]
-            files[name] = GitFileCommitted(self, int(line[0]), int(line[1]), line[-1], self.base_commit) 
+            if line[0] == line[1] == '-':
+                f = GitFileCommitted(self, 0, 0, name, self.base_commit, binary=True) 
+            else:
+                f = GitFileCommitted(self, int(line[0]), int(line[1]), name, self.base_commit, binary=False) 
+            files[name] = f
         log = self.git.status(z=True)
         for line in log.split('\0'):
             if line == '':  # two nulls is the end marker
@@ -259,10 +263,10 @@ class GitRepository(object):
                 files[name] = GitFileUntracked(self, name)
             elif status_unstaged != blank:
                 f = files[name]
-                files[name] = GitFileUnstaged(self, f.added, f.subed, f.name, f.commit)
+                files[name] = GitFileUnstaged(self, f.added, f.subed, f.name, f.commit, binary=f.binary)
             elif status_staged != blank:
                 f = files[name]
-                files[name] = GitFileStaged(self, f.added, f.subed, f.name, f.commit)
+                files[name] = GitFileStaged(self, f.added, f.subed, f.name, f.commit, binary=f.binary)
             else:
                 raise ValueError('unknown status '+status)
         return [files[name] for name in sorted(files.keys())]

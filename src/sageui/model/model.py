@@ -2,6 +2,9 @@
 The Data Model and Backend
 """
 
+import logging
+
+
 from config import Config
 from trac_server import TracServer
 from git_repository import GitRepository
@@ -33,8 +36,8 @@ class Model:
         return self.repo.current_branch()
         
     def checkout_branch(self, branch_name, ticket_number=None):
+        logging.info('checking out {} {}'.format(str(branch_name), str(ticket_number)))
         return self.repo.checkout_branch(branch_name, ticket_number)
-
 
 
     ###################################################################
