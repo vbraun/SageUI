@@ -350,12 +350,14 @@
   </object>
   <object class="GtkListStore" id="git_files_store">
     <columns>
-      <!-- column-name icon -->
-      <column type="GdkPixbuf"/>
       <!-- column-name name -->
       <column type="gchararray"/>
-      <!-- column-name filename -->
+      <!-- column-name background -->
       <column type="gchararray"/>
+      <!-- column-name strikethrough -->
+      <column type="gboolean"/>
+      <!-- column-name GitFile -->
+      <column type="PyObject"/>
     </columns>
   </object>
   <object class="GtkWindow" id="git_window">
@@ -576,6 +578,7 @@
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-refresh</property>
+                <signal name="clicked" handler="on_git_tool_refresh_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -1149,6 +1152,9 @@
     <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
     <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
     <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

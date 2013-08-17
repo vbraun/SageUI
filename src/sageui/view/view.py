@@ -112,14 +112,15 @@ class View(object):
             self.git_window.set_ticket_number(None)
         else:
             self.git_window.set_bases_list(current_branch.commit.get_history())
-            self.git_window.set_base(current_branch.commit)
             self.git_window.set_ticket_number(current_branch.ticket_number)
+            self.presenter.base_commit_selected(current_branch.commit)
 
     def set_git_base_commit(self, base_commit, changed_files):
         self.git_window.set_base(base_commit)
         self.git_window.set_changed_files(changed_files)
         
-
+    def set_git_file(self, git_file):
+        self.git_window.set_diff(git_file)
 
     ###################################################################
     # The about dialog

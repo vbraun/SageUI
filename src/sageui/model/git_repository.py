@@ -239,7 +239,7 @@ class GitRepository(object):
             [diff:+1-0:bar/foo6.txt, diff:+1-0:foo2_moved.txt, diff:+1-0:foo3.txt, unstaged:+1-0:foo4.txt, diff:+1-0:foo5.txt, staged:+0-0:staged_file, untracked:untracked_file]
         """
         files = dict()
-        log = self.git.diff(self.base_commit, cached=True, numstat=True, z=True)
+        log = self.git.diff(self.base_commit, numstat=True, z=True)
         for line in log.split('\0'):
             if line == '':  # two nulls is the end marker
                 break

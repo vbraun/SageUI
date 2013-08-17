@@ -1,5 +1,13 @@
 """
 Git Window
+
+.. note::
+
+    ComboBoxes activate the "change" callback when calling
+    :meth:`set_active`.  To work around this, we have the
+    `self._branch_entry_ignore_next_change` and
+    `self._base_view_ignore_next_change` attributes.
+
 """
 
 import gtk
@@ -40,7 +48,6 @@ class GitWindow(Buildable, Window):
         self.diff = builder.get_object('git_diff')
         builder.connect_signals(self)
         self.repo_path = None
-        # Note that the ComboBoxes activate the "change" callback even if using set_active()
         self._branch_entry_ignore_next_change = False
         self._base_view_ignore_next_change = False
         self.set_ticket_number(None)
@@ -66,14 +73,23 @@ class GitWindow(Buildable, Window):
         col = gtk.TreeViewColumn('Changed files')
         view.append_column(col)
         name = gtk.CellRendererText()
-        name.set_property('ellipsize', pango.ELLIPSIZE_MIDDLE)
-        desc = gtk.CellRendererText()
-        desc.set_property('ellipsize', pango.ELLIPSIZE_MIDDLE)
+        name.set_property('ellipsize', pango.ELLIPSIZE_START)
         col.pack_start(name, expand=True)
-        col.add_attribute(name, 'text', 1)  
-        col.pack_end(desc, expand=False)
-        col.add_attribute(name, 'text', 2)  
-        
+        col.add_attribute(name, 'text', 0)  
+        col.add_attribute(name, 'cell_background', 1)  
+        col.add_attribute(name, 'strikethrough', 2)  
+        view.set_has_tooltip(True)
+        view.connect("query-tooltip", self._files_tooltip_query)
+             
+    def _files_tooltip_query(self, treeview, x, y, mode, tooltip):
+        context = treeview.get_tooltip_context(x, y, mode)
+        if context:
+            model, path, iter = context
+            name, git_file = model.get(iter, 0, 3)
+            tooltip.set_icon_from_stock(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
+            tooltip.set_text(str(git_file))
+            return True
+        return False
 
     @property
     def prefix(self):
@@ -132,12 +148,20 @@ class GitWindow(Buildable, Window):
         self.files_view.set_model(None)
         self.files_store.clear()
         for git_file in git_file_status_list:
-            # print git_file.name
-            self.files_store.append([None, git_file.name, git_file.type])
+            name = git_file.name
+            strikethrough = False
+            background = None
+            if git_file.type == 'staged':
+                background = 'Pale Green'
+            if git_file.type == 'unstaged':
+                background = 'Orange Red'
+            if git_file.type == 'untracked':
+                strikethrough = True
+            self.files_store.append([name, background, strikethrough, git_file])
         self.files_view.set_model(self.files_store)
             
-    def set_diff(self, diff):
-        pass
+    def set_diff(self, git_file):
+        self.diff.get_buffer().set_text(str(git_file))
 
     def on_git_branch_entry_changed(self, widget, data=None):
         n = self.branch_entry.get_active()
@@ -158,7 +182,12 @@ class GitWindow(Buildable, Window):
         self.presenter.base_commit_selected(commit)
     
     def on_git_files_view_cursor_changed(self, widget, data=None):
-        print 'cursor changed', widget, data
+        sel = self.files_view.get_selection()
+        logging.info('git files_view changed')
+        _, iter = sel.get_selected()
+        git_file = self.files_store.get_value(iter, 3)
+        self.presenter.git_file_selected(git_file)
+        
 
     def on_git_window_realize(self, widget, data=None):
         self.presenter.show_current_branch()
@@ -178,3 +207,9 @@ class GitWindow(Buildable, Window):
         self.presenter.load_ticket(self.ticket_number, use_cache=True)
         self.presenter.show_trac_window()
 
+    def on_git_tool_refresh_clicked(self, widget, data=None):
+        n = self.base_view.get_active()
+        if n == -1: 
+            return
+        commit = self.base_store[n][2]
+        self.presenter.base_commit_selected(commit)

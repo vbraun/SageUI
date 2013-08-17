@@ -67,6 +67,9 @@ class Presenter(object):
         repo.base_commit = base_commit
         self.view.set_git_base_commit(repo.base_commit, repo.changes())
 
+    def git_file_selected(self, git_file):
+        self.view.set_git_file(git_file)
+    
 
     ###################################################################
     # Preferences dialog
