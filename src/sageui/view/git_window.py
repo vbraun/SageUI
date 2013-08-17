@@ -15,6 +15,7 @@ import pango
  
 from window import Window
 from buildable import Buildable
+from diff_viewer_widget import DiffViewerWidget
 
 import logging
 
@@ -161,7 +162,14 @@ class GitWindow(Buildable, Window):
         self.files_view.set_model(self.files_store)
             
     def set_diff(self, git_file):
-        self.diff.get_buffer().set_text(str(git_file))
+        try:
+            diff = git_file.diff()
+        except (AttributeError, ValueError):
+            diff = None
+        if diff:
+            self.diff.set_diff(diff)
+        else:
+            self.diff.set_error_diff()
 
     def on_git_branch_entry_changed(self, widget, data=None):
         n = self.branch_entry.get_active()

@@ -236,7 +236,13 @@ class GitRepository(object):
             sage: repo = test.git_repo() 
             sage: repo.base_commit = repo.head.get_history()[-1]
             sage: repo.changes()
-            [diff:+1-0:bar/foo6.txt, diff:+1-0:foo2_moved.txt, diff:+1-0:foo3.txt, unstaged:+1-0:foo4.txt, diff:+1-0:foo5.txt, staged:+0-0:staged_file, untracked:untracked_file]
+            [diff:+1-0:bar/foo6.txt, 
+             diff:+1-0:foo2_moved.txt, 
+             diff:+1-0:foo3.txt, 
+             unstaged:+2-0:foo4.txt,  
+             diff:+1-0:foo5.txt, 
+             staged:+0-0:staged_file, 
+             untracked:untracked_file]
         """
         files = dict()
         log = self.git.diff(self.base_commit, numstat=True, z=True)

@@ -14,12 +14,21 @@
 	generic-name="terminal_widget"/>
   </glade-widget-classes>
   
+  <glade-widget-classes>
+    <glade-widget-class 
+	title="Diff Viewer" 
+	name="DiffViewerWidget"
+	generic-name="diff_viewer_widget"/>
+  </glade-widget-classes>
+  
 
   <glade-widget-group 
       name="python" 
       title="Sage UI Widgets">
     <glade-widget-class-ref 
 	name="TerminalWidget"/>
+    <glade-widget-class-ref 
+	name="DiffViewerWidget"/>
   </glade-widget-group>
 
 </glade-catalog>

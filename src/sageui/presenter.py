@@ -23,6 +23,15 @@ class Presenter(object):
             #self.show_commandline_window()
             #self.show_trac_window()
 
+            repo = self.model.repo
+            base = repo.base_commit.get_history()[4]
+            repo.base_commit = base
+            changes = repo.changes()
+            self.view.set_git_base_commit(base, changes)
+            self.view.set_git_file(changes[3])
+ 
+
+
     def terminate(self):
         """
         Quit the program
