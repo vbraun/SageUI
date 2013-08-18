@@ -17,18 +17,18 @@ class Presenter(object):
         self.view = view_class(self)
         self.model = model_class(self)
         if self.model.config.sage_root is None:
-            self.show_setup_assistant(None, self.setup_assistant_first_run_finished)
+            self.show_setup_assistant(None, None, self.setup_assistant_first_run_finished)
         else:
-            self.show_git_window()
-            #self.show_commandline_window()
+            self.show_commandline_window()
             #self.show_trac_window()
 
-            repo = self.model.repo
-            base = repo.base_commit.get_history()[4]
-            repo.base_commit = base
-            changes = repo.changes()
-            self.view.set_git_base_commit(base, changes)
-            self.view.set_git_file(changes[3])
+            #self.show_git_window()
+            #repo = self.model.repo
+            #base = repo.base_commit.get_history()[4]
+            #repo.base_commit = base
+            #changes = repo.changes()
+            #self.view.set_git_base_commit(base, changes)
+            #self.view.set_git_file(changes[3])
  
 
 
@@ -141,8 +141,8 @@ class Presenter(object):
     ###################################################################
     # Misc. notification dialog (modal)
 
-    def show_notification(self, text):
-        self.view.new_notification_dialog(text).show()
+    def show_notification(self, parent, text):
+        self.view.new_notification_dialog(parent, text).show()
 
     def destroy_modal_dialog(self):
         self.view.destroy_modal_dialog()
@@ -152,8 +152,8 @@ class Presenter(object):
     ###################################################################
     # Error dialog (modal)
 
-    def show_error(self, title, text):
-        self.view.new_error_dialog(title, text).show()
+    def show_error(self, parent, title, text):
+        self.view.new_error_dialog(parent, title, text).show()
 
     ###################################################################
     # Setup assistant (modal)
@@ -169,7 +169,7 @@ class Presenter(object):
         """
         return self.model.sage_installation(sage_root)
 
-    def show_setup_assistant(self, sage_root, callback):
+    def show_setup_assistant(self, parent, sage_root, callback):
         """
         Assistant to figure out SAGE_ROOT
         
@@ -182,7 +182,7 @@ class Presenter(object):
         - ``callback`` -- function / method. Will be called back with 
           the new :class:`sageui.model.sage_installation.SageInstallation`
         """
-        self.view.new_setup_assistant(sage_root, callback).show()
+        self.view.new_setup_assistant(parent, sage_root, callback).show()
 
     def setup_assistant_first_run_finished(self, sage_install):
         """

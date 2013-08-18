@@ -8,6 +8,8 @@ Python objects.
 The managed branches are all named `sageui/1234/u/user/description`.
 """
 
+import logging
+
 from git_commit import GitCommit
 from git_error import GitError, DetachedHeadException
 from git_branch import GitBranch, GitLocalBranch, GitManagedBranch
@@ -108,7 +110,7 @@ class GitRepository(object):
         """
         Check out branch.
 
-        This modifies the working directory.
+        This modifies the git working tree.
 
         EXAMPLES::
 
@@ -124,8 +126,12 @@ class GitRepository(object):
             branch = GitManagedBranch(self, branch_name, ticket_number)
         else:
             branch = GitLocalBranch(self, branch_name)
-        assert branch is not None
-        self.git.checkout(branch.full_branch_name)
+        name = branch.full_branch_name
+        if self.git.exit_code.show_ref(name) != 0:
+            logging.debug('downloading branch %s', name)
+            self.git.fetch('trac', branch_name)
+            self.git.branch(name, 'FETCH_HEAD')
+        self.git.checkout(name)
         self._base_commit = None
         return branch
 

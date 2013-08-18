@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!-- interface-requires sageui 0.0 -->
   <requires lib="gtk+" version="2.24"/>
+  <!-- interface-requires sageui 0.0 -->
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="can_focus">False</property>
@@ -1155,10 +1155,17 @@
     <property name="title" translatable="yes">Setup SageUI</property>
     <property name="modal">True</property>
     <property name="icon">icons/sage.svg</property>
+    <property name="type_hint">dialog</property>
     <signal name="close" handler="on_setup_assistant_close" swapped="no"/>
     <signal name="apply" handler="on_setup_assistant_apply" swapped="no"/>
     <signal name="cancel" handler="on_setup_assistant_cancel" swapped="no"/>
     <signal name="prepare" handler="on_setup_assistant_prepare" swapped="no"/>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <placeholder/>
     </child>

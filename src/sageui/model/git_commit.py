@@ -58,6 +58,25 @@ class GitCommit(object):
             result.append(GitCommit(self.repository, sha1, title))
         result.append(master)
         return result
-    
         
+    def get_message(self, format='fuller'):
+        """
+        Return the log entry for the commit
+        
+        EXAMPLES::
+
+            sage: repo = test.git_repo() 
+            sage: commit = repo.head.get_history()[-1]
+            sage: print commit.get_message()
+            commit ...
+            Author:     ...
+            AuthorDate: ...
+            Commit:     ...
+            CommitDate: ...
+            <BLANKLINE>
+                initial commit
+            <BLANKLINE>
+        """
+        return self.repository.git.log(self.sha1, format=format, max_count=1)
+
         

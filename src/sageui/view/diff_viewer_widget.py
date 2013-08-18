@@ -1,5 +1,11 @@
 """
-The drawing area widget for the page
+Widget to Display Diffs
+
+Slight misnomer as the widget can also show 
+
+* an error that no diff is available 
+ 
+* a single commit message
 """
 
 import gtk
@@ -30,6 +36,9 @@ class DiffViewerWidget(gtk.TextView):
         tag.set_property('family', 'monospace')
         tag.set_property('background-gdk', self.color_minus)
         tag_table.add(tag)
+
+    def clear(self):
+        self.get_buffer().set_text('')
 
     def set_diff(self, diff_string):
         buf = self.get_buffer()

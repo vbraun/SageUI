@@ -60,6 +60,19 @@ class GitInterfaceSilentProxy(object):
         return None  # the "silent" part
 
 
+class GitInterfaceExitCodeProxy(object):
+    """
+    Execute a git command silently, return only the exit code.
+    """
+    def __init__(self, actual_interface):
+        self._interface = actual_interface
+
+    def execute(self, cmd, *args, **kwds):
+        result = self._interface._run(cmd, args, kwds, 
+                                      popen_stdout=subprocess.PIPE, 
+                                      popen_stderr=subprocess.PIPE,
+                                      exit_code_to_exception=False)
+        return result['exit_code']
 
 
 class GitInterfacePrintProxy(object):
@@ -107,6 +120,7 @@ class GitInterface(object):
         self._git_cmd = 'git' if git_cmd is None else git_cmd
         self._user_email_set = False
         self.silent = GitInterfaceSilentProxy(self)
+        self.exit_code = GitInterfaceExitCodeProxy(self)
         self.echo = GitInterfacePrintProxy(self)
 
     @property
@@ -412,15 +426,19 @@ class GitInterface(object):
             self._log('stderr', stderr)
         return {'exit_code':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':complete_cmd}
 
-    def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
-        # not sure which commands could possibly create a commit object with
-        # some crazy flags set - these commands should be safe
-        if cmd not in [ "config", "diff", "grep", "log", "ls_remote", "remote", "reset", "show", "show_ref", "status", "symbolic_ref" ]:
+    # commands that cannot change the working tree even with
+    # some crazy flags set - these commands should be safe
+    _safe_commands = [
+        'config', 'diff', 'grep', 'log', 'ls_remote', 'remote', 'reset', 'show', 
+        'show_ref', 'status', 'symbolic_ref' ]
+        
+    def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None, exit_code_to_exception=True):
+        if cmd not in self._safe_commands:
             self._check_user_email()
         result = self._run_unsafe(cmd, args, kwds,
                                   popen_stdout=popen_stdout,
                                   popen_stderr=popen_stderr)
-        if result['exit_code']:
+        if exit_code_to_exception and result['exit_code']:
             raise GitError(result)
         return result
 
@@ -556,4 +574,5 @@ def create_wrapper(git_cmd_underscore):
 for command in git_commands:
     setattr(GitInterface, command, create_wrapper(command))
     setattr(GitInterfaceSilentProxy, command, create_wrapper(command))
+    setattr(GitInterfaceExitCodeProxy, command, create_wrapper(command))
     setattr(GitInterfacePrintProxy, command, create_wrapper(command))

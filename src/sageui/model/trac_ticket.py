@@ -39,15 +39,23 @@ def TicketChange(changelog_entry):
     # print time, author, change, data1, data2, data3
     if change == 'comment':
         return TicketComment_class(time, author, change, data1, data2, data3)
-    return TicketChange_class(time, author, change)
+    return TicketChange_class(time, author, change, debug=(data1, data2, data3))
 
 
 class TicketChange_class(object):
     
-    def __init__(self, time, author, change):
+    def __init__(self, time, author, change, debug=None):
         self._time = make_time(time)
         self._author = author
         self._change = change
+        if debug:
+            self._debug = debug
+
+    def get_debug(self):
+        try:
+            return ' ['+str(self._debug)+']'
+        except AttributeError:
+            return ''
 
     def get_ctime(self):
         return self._time
@@ -57,6 +65,9 @@ class TicketChange_class(object):
         
     def get_change(self):
         return self._change
+
+    def __repr__(self):
+        return self.get_author() + ' changed ' + self.get_change() + self.get_debug()
 
 
 class TicketComment_class(TicketChange_class):
@@ -74,6 +85,8 @@ class TicketComment_class(TicketChange_class):
     def get_comment(self):
         return self._comment
 
+    def __repr__(self):
+        return self.get_author() + ' commented "' + self.get_comment() + '" [' + self.get_number() + ']'
 
 
 def TracTicket(ticket_number, server_proxy):

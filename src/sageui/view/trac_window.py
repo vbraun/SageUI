@@ -1,5 +1,7 @@
 
 
+import logging
+
 import gtk 
 import gobject
 import pango
@@ -189,7 +191,7 @@ class TracWindow(Buildable, Window):
         if not iter: 
             return
         ticket_number = model.get_value(iter, 0)
-        print 'cursor changed to ticket #'+str(ticket_number)
+        logging.info('trac ticket cursor changed to #%s', ticket_number)
         self.presenter.ticket_selected(ticket_number)
 
     def display_ticket(self, ticket):
@@ -234,6 +236,9 @@ class TracWindow(Buildable, Window):
         append(ticket.get_mtime().ctime(), trac_field_tag)
         append('\n\n')
         append(str(ticket._data), debug_tag)
+        append('\n')
+        for log in ticket._change_log:
+            append(str(log) + '\n', debug_tag)
 
     def on_trac_window_delete_event(self, widget, data=None):
         self.presenter.hide_trac_window()
@@ -246,31 +251,31 @@ class TracWindow(Buildable, Window):
         print 'trac window map'
 
     def on_trac_menu_new_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac new ticket")
+        self.presenter.show_notification(self, "todo: trac new ticket")
 
     def on_trac_menu_open_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac open ticket")
+        self.presenter.show_notification(self, "todo: trac open ticket")
 
     def on_trac_menu_about_activate(self, widget, data=None):
          self.presenter.show_about_dialog()
 
     def on_trac_menu_cut_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac cut")
+        self.presenter.show_notification(self, "todo: trac cut")
         
     def on_trac_menu_copy_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac copy")
+        self.presenter.show_notification(self, "todo: trac copy")
         
     def on_trac_menu_paste_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac paste")
+        self.presenter.show_notification(self, "todo: trac paste")
 
     def on_trac_menu_delete_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: trac delete")
+        self.presenter.show_notification(self, "todo: trac delete")
 
     def on_trac_menu_preferences_activate(self, widget, data=None):
         self.presenter.show_preferences_dialog()
 
     def on_trac_tool_new_clicked(self, widget, data=None):
-        self.presenter.show_notification("todo: trac new ticket")
+        self.presenter.show_notification(self, "todo: trac new ticket")
     
     def on_trac_tool_web_clicked(self, widget, data=None):
         url = 'http://trac.sagemath.org/{0}'.format(self.current_ticket.get_number())
@@ -280,6 +285,7 @@ class TracWindow(Buildable, Window):
         branch = self.current_ticket.get_branch()
         assert branch is not None  # button should have been disabled
         number = self.current_ticket.get_number()
+        logging.info('git button for %s %s', branch, number)
         self.presenter.checkout_branch(branch, number)
         self.presenter.show_git_window()
         
@@ -289,10 +295,11 @@ class TracWindow(Buildable, Window):
     def on_trac_search_entry_activate(self, widget, data=None):
         entry = self.search_entry.get_buffer().get_text()
         entry = entry.strip('# ')
+        logging.info('searching trac for %s', entry)
         try:
             ticket_number = int(entry)
             self.presenter.load_ticket(ticket_number)
         except ValueError:
-            self.presenter.show_error('Invalid ticket number', 'Expected integer, got: '+entry)
+            self.presenter.show_error(self, 'Invalid ticket number', 'Expected integer, got: '+entry)
 
         

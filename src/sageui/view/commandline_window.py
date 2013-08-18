@@ -44,16 +44,16 @@ class CommandlineWindow(Buildable, Window):
         self.presenter.hide_commandline_window()
 
     def on_cmdline_menu_new_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: new attached file")
+        self.presenter.show_notification(self, "todo: new attached file")
         
     def on_cmdline_menu_open_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: open file and attach")
+        self.presenter.show_notification(self, "todo: open file and attach")
 
     def on_cmdline_menu_copy_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: copy")
+        self.presenter.show_notification(self, "todo: copy")
         
     def on_cmdline_menu_paste_activate(self, widget, data=None):
-        self.presenter.show_notification("todo: paste")
+        self.presenter.show_notification(self, "todo: paste")
         
     def on_cmdline_menu_preferences_activate(self, widget, data=None):
         self.presenter.show_preferences_dialog()

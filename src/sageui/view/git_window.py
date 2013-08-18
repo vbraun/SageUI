@@ -161,7 +161,9 @@ class GitWindow(Buildable, Window):
             self.files_store.append([name, background, strikethrough, git_file])
         self.files_view.set_model(self.files_store)
             
-    def set_diff(self, git_file):
+    def set_diff(self, git_file=None):
+        if git_file is None:
+            self.diff.clear()
         try:
             diff = git_file.diff()
         except (AttributeError, ValueError):
@@ -171,8 +173,14 @@ class GitWindow(Buildable, Window):
         else:
             self.diff.set_error_diff()
 
+    def set_commit_message(self, commit):
+        msg = commit.get_message()
+        self.diff.set_commit_message(msg)
+
     def on_git_branch_entry_changed(self, widget, data=None):
         n = self.branch_entry.get_active()
+        if n == -1:
+            return
         if self._branch_entry_ignore_next_change:
             self._branch_entry_ignore_next_change=False
             return
@@ -185,6 +193,8 @@ class GitWindow(Buildable, Window):
             self._base_view_ignore_next_change = False
             return
         n = self.base_view.get_active()
+        if n == -1:
+            return
         logging.info('git base_view changed %s', n)
         commit = self.base_store[n][2]
         self.presenter.base_commit_selected(commit)

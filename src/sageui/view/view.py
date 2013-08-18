@@ -10,7 +10,9 @@ dialogs. They are treated slighty differently:
 
 * Modal dialogs are continuously re-constructed. There can only 
   be one modal dialog at any one time. When the user closes it,
-  it must call :meth:`View.destroy_modal_dialog`.
+  it must call :meth:`View.destroy_modal_dialog`. Modal dialogs 
+  have their parent window as argument so they can display 
+  in front of it.
 """
 
 import os
@@ -63,7 +65,7 @@ class View(object):
     def show_commandline_window(self, path, command):
         self._open_windows.add(self.commandline_window)
         self.commandline_window.run(path, command)
-        self.commandline_window.show()
+        self.commandline_window.present()
 
     def hide_commandline_window(self):
         self.commandline_window.hide()
@@ -80,7 +82,7 @@ class View(object):
         
     def show_trac_window(self):
         self._open_windows.add(self.trac_window)
-        self.trac_window.show()
+        self.trac_window.present()
 
     def hide_trac_window(self):
         self.trac_window.hide()
@@ -98,7 +100,7 @@ class View(object):
     def show_git_window(self, repo_path):
         self._open_windows.add(self.git_window)
         self.git_window.set_repo(repo_path)
-        self.git_window.show()
+        self.git_window.present()
 
     def hide_git_window(self):
         self.git_window.hide()
@@ -110,6 +112,7 @@ class View(object):
         if current_branch is None:
             self.git_window.set_bases_list(None)
             self.git_window.set_ticket_number(None)
+            self.git_window.set_diff(None)
         else:
             self.git_window.set_bases_list(current_branch.commit.get_history())
             self.git_window.set_ticket_number(current_branch.ticket_number)
@@ -118,6 +121,7 @@ class View(object):
     def set_git_base_commit(self, base_commit, changed_files):
         self.git_window.set_base(base_commit)
         self.git_window.set_changed_files(changed_files)
+        self.git_window.set_commit_message(base_commit)
         
     def set_git_file(self, git_file):
         self.git_window.set_diff(git_file)
@@ -163,23 +167,28 @@ class View(object):
     ###################################################################
     # Modal dialogs
 
-    def new_notification_dialog(self, text):
+    def new_notification_dialog(self, parent, text):
         from notification_dialog import NotificationDialog
         dlg = NotificationDialog(self.presenter, self.glade_file, text)
+        dlg.window.set_transient_for(parent.window)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
 
-    def new_error_dialog(self, title, text):
+    def new_error_dialog(self, parent, title, text):
         from error_dialog import ErrorDialog
         dlg = ErrorDialog(self.presenter, self.glade_file, title, text)
+        dlg.window.set_transient_for(parent.window)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
         
-    def new_setup_assistant(self, sage_root, callback):
+    def new_setup_assistant(self, parent, sage_root, callback):
         from setup_assistant import SetupAssistant
         dlg = SetupAssistant(self.presenter, self.glade_file, sage_root, callback)
+        if parent is not None:
+            # parent is allowed to be none if running at the first start
+            dlg.window.set_transient_for(parent.window)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg

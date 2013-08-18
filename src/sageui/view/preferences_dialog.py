@@ -50,7 +50,7 @@ class PreferencesDialog(Buildable, Window):
         self.presenter.hide_preferences_dialog()
         
     def on_prefs_root_change_clicked(self, widget, data=None):
-        self.presenter.show_setup_assistant(
+        self.presenter.show_setup_assistant(self,
             self.sage_root.get_text(),
             self.setup_assistant_callback)
         

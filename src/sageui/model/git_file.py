@@ -121,27 +121,6 @@ class GitFileCommitted(GitFileABC):
         args = self._diff_commits() + ['--word-diff=porcelain', '--', self.name]
         return self.repository.git.diff(*args)
 
-    def commit_log(self, format='fuller'):
-        """
-        Return the log entry for ``self.commit``
-        
-        EXAMPLES::
-
-            sage: repo = test.new_git_repo() 
-            sage: repo.base_commit = repo.head.get_history()[-1]
-            sage: git_file = repo.changes()[3]
-            sage: print git_file.commit_log()
-            commit ...
-            Author:     ...
-            AuthorDate: ...
-            Commit:     ...
-            CommitDate: ...
-            <BLANKLINE>
-                initial commit
-            <BLANKLINE>
-        """
-        return self.repository.git.log(self.commit, format=format, max_count=1)
-
 
 class GitFileDiff(GitFileCommitted):
     """
