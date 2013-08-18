@@ -25,7 +25,7 @@ about data nor about the gui, it just ties the two together.
 ##############################################################################
 
 
-from model.trac_error import TracError
+from .model.trac_error import TracError
 
 
 class Presenter(object):

@@ -22,9 +22,10 @@ Assistant/wizzard/droid to guide you through setting up SAGE_ROOT
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+import logging
  
-from window import Window
-from buildable import Buildable
+from .window import Window
+from .buildable import Buildable
 
 
 class SetupAssistant(Buildable, Window):
@@ -48,15 +49,15 @@ class SetupAssistant(Buildable, Window):
         builder.connect_signals(self)
 
     def on_setup_assistant_apply(self, widget, data=None):
-        print 'apply'
+        logging.info('setup assistant apply')
         self.callback(self.sage)
 
     def on_setup_assistant_close(self, widget, data=None):
-        print 'close'
+        logging.info('setup assistant close')
         self.presenter.destroy_modal_dialog()
 
     def on_setup_assistant_cancel(self, widget, data=None):
-        print 'cancel'
+        logging.info('setup assistant cancel')
         self.presenter.destroy_modal_dialog()
 
     def on_setup_assistant_prepare(self, widget, data=None):

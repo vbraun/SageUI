@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##############################################################################
 #  SageUI: A graphical user interface to Sage, Trac, and Git.
@@ -30,7 +30,7 @@ sys.path.append(os.path.join(os.getcwd(), 'src'))
 from sageui.test.doctest_parser import SageDocTestParser, SageOutputChecker
 
 def testmod(module, globs={}):
-    if isinstance(module, basestring):
+    if isinstance(module, str):
         module = importlib.import_module(module)
     parser = SageDocTestParser(long=True, optional_tags=('sage',))
     finder = doctest.DocTestFinder(parser=parser)

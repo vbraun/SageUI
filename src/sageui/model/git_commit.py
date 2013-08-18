@@ -20,7 +20,9 @@ Git Commit
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+from functools import total_ordering
 
+@total_ordering
 class GitCommit(object):
     
     def __init__(self, repository, commit_sha1, title=None):
@@ -50,18 +52,24 @@ class GitCommit(object):
     def __hash__(self):
         return hash(self._sha1)
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
         """
         EXAMPLES::
 
             sage: repo = test.git_repo()
-            sage: assert 0 == repo.head.__cmp__(repo.base_commit)
-            sage: assert 0 == cmp(*[repo.head._sha1, repo.base_commit._sha1])
-            sage: assert 0 == cmp(*[repo.head, repo.base_commit])
-            sage: assert 0 == cmp(repo.head, repo.base_commit)
+            sage: assert repo.head.__eq__(repo.base_commit)
         """
-        return cmp(self._sha1, other._sha1)
+        return (self._sha1 == other._sha1)
 
+    def __lt__(self, other):
+        """
+        EXAMPLES::
+
+            sage: repo = test.git_repo()
+            sage: assert not repo.head.__lt__(repo.base_commit)
+        """
+        return (self._sha1 < other._sha1)
+       
     def get_history(self, limit=20):
         """
         Return the list of (direct and indirect) parent commits
@@ -85,7 +93,7 @@ class GitCommit(object):
 
             sage: repo = test.git_repo() 
             sage: commit = repo.head.get_history()[-1]
-            sage: print commit.get_message()
+            sage: print(commit.get_message())
             commit ...
             Author:     ...
             AuthorDate: ...

@@ -31,28 +31,25 @@ import logging
 
 def check_gui_prerequisites():
     try:
+        from gi import pygtkcompat
+        pygtkcompat.enable() 
+        pygtkcompat.enable_gtk(version='3.0')
         import gtk
     except ImportError:
         logging.critical('You need the Python GTK interface!')
         sys.exit(1)
-    try:
-        import pygtk
-        pygtk.require('2.0')
-    except ImportError:
-        logging.critical('You need PyGTK version 2 or higher!')
-        sys.exit(1)
-    try:
-        import gtk.glade
-    except ImportError:
-        logging.critical('You need the Python Glade interface!')
-        sys.exit(1)
+    #try:
+    #    import gtk.glade
+    #except ImportError:
+    #    logging.critical('You need the Python Glade interface!')
+    #    sys.exit(1)
     try:
         import cairo
     except ImportError:
         logging.critical('You need the Python Cairo interface!')
         sys.exit(1)
     try: 
-        import vte
+        from gi.repository import Vte
     except ImportError:
         logging.critical('You need VTE!')
         sys.exit(1)

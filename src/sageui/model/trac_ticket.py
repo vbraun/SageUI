@@ -54,7 +54,7 @@ def make_time(time):
 
 def TicketChange(changelog_entry):
     time, author, change, data1, data2, data3 = changelog_entry
-    # print time, author, change, data1, data2, data3
+    # print(time, author, change, data1, data2, data3)
     if change == 'comment':
         return TicketComment_class(time, author, change, data1, data2, data3)
     return TicketChange_class(time, author, change, debug=(data1, data2, data3))
@@ -95,7 +95,7 @@ class TicketComment_class(TicketChange_class):
         self._number = data1
         self._comment = data2
         if data3 != 1:
-            print 'TicketComment got data3 =', data3
+            print('TicketComment got data3 =', data3)
 
     def get_number(self):
         return self._number

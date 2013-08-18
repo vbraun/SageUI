@@ -27,8 +27,9 @@ EXAMPLES::
 
 from datetime import datetime
 
-from trac_ticket import TracTicket
-from trac_database import TracDatabase
+from .trac_ticket import TracTicket
+from .trac_database import TracDatabase
+from .digest_transport import DigestTransport
 
 
 class TracServer(object):
@@ -41,11 +42,10 @@ class TracServer(object):
         self._current_ticket_number = None
 
     def _create_anonymous_server_proxy(self, url_server, url_location):
-        import urlparse
-        url = urlparse.urljoin(url_server, url_location)
-        from digest_transport import DigestTransport
+        import urllib.parse
+        url = urllib.parse.urljoin(url_server, url_location)
         transport = DigestTransport()
-        from xmlrpclib import ServerProxy
+        from xmlrpc.client import ServerProxy
         return ServerProxy(url, transport=transport)
 
     def is_cached(self, ticket_number):

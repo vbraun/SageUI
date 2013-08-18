@@ -68,11 +68,11 @@ def strip_string_literals(code, state=None):
         sage: s, literals, state = strip_string_literals(r'''['a', "b", 'c', "d\""]''')
         sage: s
         '[%(L1)s, %(L2)s, %(L3)s, %(L4)s]'
-        sage: literals
-        {'L4': '"d\\""', 'L2': '"b"', 'L3': "'c'", 'L1': "'a'"}
-        sage: print s % literals
+        sage: literals ==  {'L4': '"d\\""', 'L3': "'c'", 'L2': '"b"', 'L1': "'a'"}
+        True
+        sage: print(s % literals)
         ['a', "b", 'c', "d\""]
-        sage: print strip_string_literals(r'-"\\\""-"\\"-')[0]
+        sage: print(strip_string_literals(r'-"\\\""-"\\"-')[0])
         -%(L1)s-%(L2)s-
         
     Triple-quotes are handled as well::
@@ -80,7 +80,7 @@ def strip_string_literals(code, state=None):
         sage: s, literals, state = strip_string_literals("[a, '''b''', c, '']")
         sage: s
         '[a, %(L1)s, c, %(L2)s]'
-        sage: print s % literals
+        sage: print(s % literals)
         [a, '''b''', c, '']
 
     Comments are substitute too::
@@ -186,33 +186,33 @@ def parse_optional_tags(string):
 
         sage: from sageui.test.doctest_parser import parse_optional_tags
         sage: parse_optional_tags("sage: magma('2 + 2')# optional: magma")
-        set(['magma'])
+        {'magma'}
         sage: parse_optional_tags("sage: #optional -- mypkg")
-        set(['mypkg'])
+        {'mypkg'}
         sage: parse_optional_tags("sage: print(1)  # parentheses are optional here")
-        set([])
+        set()
         sage: parse_optional_tags("sage: print(1)  # optional")
-        set([''])
+        {''}
         sage: sorted(list(parse_optional_tags("sage: #optional -- foo bar, baz")))
         ['bar', 'foo']
         sage: sorted(list(parse_optional_tags("    sage: factor(10^(10^10) + 1) # LoNg TiME, NoT TeSTED; OptioNAL -- P4cka9e")))
         ['long time', 'not tested', 'p4cka9e']
         sage: parse_optional_tags("    sage: raise RuntimeError # known bug")
-        set(['bug'])
+        {'bug'}
         sage: sorted(list(parse_optional_tags("    sage: determine_meaning_of_life() # long time, not implemented")))
         ['long time', 'not implemented']
 
     We don't parse inside strings::
 
         sage: parse_optional_tags("    sage: print '  # long time'")
-        set([])
+        set()
         sage: parse_optional_tags("    sage: print '  # long time'  # not tested")
-        set(['not tested'])
+        {'not tested'}
 
     UTF-8 works::
 
          sage: parse_optional_tags("'ěščřžýáíéďĎ'")
-         set([])
+         set()
     """
     safe, literals, state = strip_string_literals(string)
     first_line = safe.split('\n', 1)[0]
@@ -254,7 +254,7 @@ def parse_tolerance(source, want):
         sage: from sageui.test.doctest_parser import parse_tolerance
         sage: marked = parse_tolerance("sage: s.update(abs_tol = .0000001)", "")
         sage: type(marked)
-        <type 'str'>
+        <class 'str'>
         sage: marked = parse_tolerance("sage: s.update(tol = 0.1); s.rel_tol # abs tol 0.01", "")
         sage: marked.tol
         0
@@ -319,6 +319,7 @@ def reduce_hex(fingerprints):
         sage: reduce_hex(["12399aedf","abc"])
         '0000000000000000000000012399a463'
     """
+    from functools import reduce
     from operator import xor
     res = reduce(xor, (int(x, 16) for x in fingerprints), 0)
     if res < 0:
@@ -372,7 +373,7 @@ class MarkedOutput(str):
             sage: s = MarkedOutput("0.0007401")
             sage: s.update(abs_tol = .0000001)
             '0.0007401'
-            sage: from cPickle import loads, dumps
+            sage: from pickle import loads, dumps
             sage: t = loads(dumps(s)) # indirect doctest
             sage: t == s
             True
@@ -519,16 +520,16 @@ class SageDocTestParser(doctest.DocTestParser):
 
             sage: n = 1234\
             ....:     5678
-            sage: print n
+            sage: print(n)
             12345678
             sage: type(n)
-            <type 'int'>
+            <class 'int'>
 
         It also works without the line continuation::
 
             sage: m = 8765\
             4321
-            sage: print m
+            sage: print(m)
             87654321
         """
         # Hack for non-standard backslash line escapes accepted by the current
@@ -613,7 +614,7 @@ class SageOutputChecker(doctest.OutputChecker):
     
         EXAMPLES::
 
-            sage: print 'This is \x1b[1mbold\x1b[0m text'
+            sage: print('This is \x1b[1mbold\x1b[0m text')
             This is <CSI-1m>bold<CSI-0m> text
 
         TESTS::
@@ -728,7 +729,7 @@ class SageOutputChecker(doctest.OutputChecker):
             RuntimeError
             sage: 1  # abs tol 2
             -0.5
-            sage: print "1.000009"   # abs tol 1e-5
+            sage: print("1.000009")   # abs tol 1e-5
             1.0
         """
         got = self.human_readable_escape_sequences(got)
@@ -792,28 +793,28 @@ class SageOutputChecker(doctest.OutputChecker):
 
         ::
 
-            sage: print OC.output_difference(tenabs,nf,optflag)
+            sage: print(OC.output_difference(tenabs,nf,optflag))
             Expected:
                 10.0
             Got:
                 9.5
             Tolerance exceeded: 5e-01 > 1e-01
 
-            sage: print OC.output_difference(tentol,zero,optflag)
+            sage: print(OC.output_difference(tentol,zero,optflag))
             Expected:
                 10.0
             Got:
                 0.0
             Tolerance exceeded: infinity > 1e-01
 
-            sage: print OC.output_difference(tentol,eps,optflag)
+            sage: print(OC.output_difference(tentol,eps,optflag))
             Expected:
                 10.0
             Got:
                 -0.05
             Tolerance exceeded: 1e+00 > 1e-01
 
-            sage: print OC.output_difference(tlist,L,optflag)
+            sage: print(OC.output_difference(tlist,L,optflag))
             Expected:
                 [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
             Got:
@@ -825,49 +826,49 @@ class SageOutputChecker(doctest.OutputChecker):
 
         TESTS::
 
-            sage: print OC.output_difference(tenabs,zero,optflag)
+            sage: print(OC.output_difference(tenabs,zero,optflag))
             Expected:
                 10.0
             Got:
                 0.0
             Tolerance exceeded: 1e+01 > 1e-01
 
-            sage: print OC.output_difference(tenrel,zero,optflag)
+            sage: print(OC.output_difference(tenrel,zero,optflag))
             Expected:
                 10.0
             Got:
                 0.0
             Tolerance exceeded: 1e+00 > 1e-01
 
-            sage: print OC.output_difference(tenrel,eps,optflag)
+            sage: print(OC.output_difference(tenrel,eps,optflag))
             Expected:
                 10.0
             Got:
                 -0.05
             Tolerance exceeded: 1e+00 > 1e-01
 
-            sage: print OC.output_difference(zerotol,ten,optflag)
+            sage: print(OC.output_difference(zerotol,ten,optflag))
             Expected:
                 0.0
             Got:
                 10.05
             Tolerance exceeded: 1e+01 > 1e-01
 
-            sage: print OC.output_difference(zeroabs,ten,optflag)
+            sage: print(OC.output_difference(zeroabs,ten,optflag))
             Expected:
                 0.0
             Got:
                 10.05
             Tolerance exceeded: 1e+01 > 1e-01
 
-            sage: print OC.output_difference(zerorel,eps,optflag)
+            sage: print(OC.output_difference(zerorel,eps,optflag))
             Expected:
                 0.0
             Got:
                 -0.05
             Tolerance exceeded: infinity > 1e-01
 
-            sage: print OC.output_difference(zerorel,ten,optflag)
+            sage: print(OC.output_difference(zerorel,ten,optflag))
             Expected:
                 0.0
             Got:

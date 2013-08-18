@@ -20,24 +20,34 @@ The drawing area widget for the page
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
-
+import os
 import gtk
-import math
-import vte
 
-class TerminalWidget(vte.Terminal):
+from gi.repository import GLib, Vte
+
+
+class TerminalWidget(Vte.Terminal):
     __gtype_name__ = 'TerminalWidget'
     __gsignals__ = {
         #"expose_event": "override" 
         }
  
     def __init__(self):
-        vte.Terminal.__init__(self)
+        Vte.Terminal.__init__(self)
 
     def configure(self):
-        from gtk.gdk import Color
-        self.set_color_background(Color('white'))
-        self.set_color_foreground(Color('black'))
+        from gtk.gdk import color_parse
+        self.set_color_background(color_parse('white'))
+        self.set_color_foreground(color_parse('black'))
         #self.set_size(80, -1)
 
-
+    def fork_command(self, executable):
+        return self.fork_command_full(
+            Vte.PtyFlags.DEFAULT,
+            os.environ['HOME'],
+            [executable],
+            [],
+            GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+            None,
+            None,
+        )

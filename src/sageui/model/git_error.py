@@ -31,7 +31,8 @@ class GitError(RuntimeError):
         sage: raise GitError({'exit_code':128, 'stdout':'', 'stderr':'', 'cmd':'command'})
         Traceback (most recent call last):
         ...
-        GitError: git returned with non-zero exit code (128) when executing "command"
+        sageui.model.git_error.GitError: git returned with 
+        non-zero exit code (128) when executing "command"
     """
     def __init__(self, result, explain=None, advice=None):
         r"""
@@ -71,8 +72,8 @@ class DetachedHeadException(RuntimeError):
         sage: raise DetachedHeadException()
         Traceback (most recent call last):
         ...
-        DetachedHeadException: unexpectedly, git is in a detached HEAD state
-
+        sageui.model.git_error.DetachedHeadException: unexpectedly, 
+        git is in a detached HEAD state
     """
     def __init__(self):
         r"""
@@ -98,8 +99,8 @@ class InvalidStateError(RuntimeError):
         sage: raise InvalidStateError()
         Traceback (most recent call last):
         ...
-        InvalidStateError: unexpectedly, git is in an unclean state
-
+        sageui.model.git_error.InvalidStateError: unexpectedly, 
+        git is in an unclean state
     """
     def __init__(self):
         r"""
@@ -126,7 +127,8 @@ class UserEmailException(RuntimeError):
         sage: raise UserEmailException()
         Traceback (most recent call last):
         ...
-        UserEmailException: user/email is not configured, cannot make commits
+        sageui.model.git_error.UserEmailException: user/email 
+        is not configured, cannot make commits
     """
     def __init__(self):
         r"""

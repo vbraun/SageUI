@@ -33,12 +33,12 @@ class Config(object):
 
     def _save(self):
         data_json = json.JSONEncoder(indent=2).encode(self._data)
-        with open(self.settings_file, 'wb') as f:
+        with open(self.settings_file, 'w', encoding='utf-8') as f:
             f.write(data_json)
 
     def _load(self):
         try:        
-            with open(self.settings_file, 'rb') as f:
+            with open(self.settings_file, 'r', encoding='utf-8') as f:
                 self._data = json.JSONDecoder().decode(f.read())
         except (IOError, OSError, ValueError):
             self._data = dict()

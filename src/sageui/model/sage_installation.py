@@ -37,7 +37,8 @@ class SageInstallation(object):
             sage_root = subprocess.check_output([
                 'sage',
                 '-python', '-c',
-                'import os; print os.environ["SAGE_ROOT"]'])
+                'import os; print os.environ["SAGE_ROOT"]'
+            ]).decode('utf-8')
         except subprocess.CalledProcessError as err:
             return None
         return sage_root.strip()
@@ -60,7 +61,8 @@ class SageInstallation(object):
         assert self.is_usable
         try:
             version = subprocess.check_output([
-                os.path.join(self.sage_root, 'sage'), '--version'])
+                os.path.join(self.sage_root, 'sage'), '--version'
+            ]).decode('utf-8')
         except CalledProcessError as err:
             return str(err)
         return version

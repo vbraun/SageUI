@@ -16,10 +16,10 @@ AUTHORS:
 #  the License, or (at your option) any later version.
 #*****************************************************************************
 
-from xmlrpclib import SafeTransport, Fault
-import urllib2
+from xmlrpc.client import SafeTransport, Fault
+import urllib.request
 
-class DigestTransport(object, SafeTransport):
+class DigestTransport(SafeTransport):
     """
     Handles an HTTP transaction to an XML-RPC server.
 
@@ -61,7 +61,8 @@ class DigestTransport(object, SafeTransport):
 
         """
         if self._opener is None:
-            self._opener = urllib2.build_opener(urllib2.HTTPDigestAuthHandler())
+            self._opener = urllib.request.build_opener(
+                urllib.request.HTTPDigestAuthHandler())
         return self._opener
 
     def add_authentication(self, realm, url, username, password):
@@ -75,14 +76,14 @@ class DigestTransport(object, SafeTransport):
             sage: dt = DigestTransport()
             sage: dt.add_authentication("realm", "url", "username", "password")
             sage: dt.opener
-            <urllib2.OpenerDirector instance at 0x...>
+
 
         """
         assert self._opener is None
 
-        authhandler = urllib2.HTTPDigestAuthHandler()
+        authhandler = urllib.request.HTTPDigestAuthHandler()
         authhandler.add_password(realm,url,username,password)
-        self._opener = urllib2.build_opener(authhandler)
+        self._opener = urllib.request.build_opener(authhandler)
 
     def single_request(self, host, handler, request_body, verbose):
         """
@@ -92,8 +93,8 @@ class DigestTransport(object, SafeTransport):
 
             sage: from sage.dev.digest_transport import DigestTransport
             sage: from sage.env import TRAC_SERVER_URI
-            sage: import urlparse
-            sage: url = urlparse.urlparse(TRAC_SERVER_URI).netloc
+            sage: import urllib.parse
+            sage: url = urllib.parse.urlparse(TRAC_SERVER_URI).netloc
             sage: d = DigestTransport()
             sage: d.single_request(url, 'xmlrpc', "<?xml version='1.0'?><methodCall><methodName>ticket.get</methodName><params><param><value><int>1000</int></value></param></params></methodCall>", 0) # optional: internet
             ([1000,
@@ -116,15 +117,13 @@ class DigestTransport(object, SafeTransport):
                'resolution': 'fixed'}],)
 
         """
+        import urllib.parse
         try:
-            import urlparse
-            req = urllib2.Request(
-                    urlparse.urlunparse(('http', host, handler, '', '', '')),
-                    request_body, {'Content-Type': 'text/xml',
-                        'User-Agent': self.user_agent})
-
+            req = urllib.request.Request(
+                urllib.parse.urlunparse(('http', host, handler, '', '', '')),
+                request_body, {'Content-Type': 'text/xml',
+                               'User-Agent': self.user_agent})
             response = self.opener.open(req)
-
             self.verbose = verbose
             return self.parse_response(response)
         except Fault as e:

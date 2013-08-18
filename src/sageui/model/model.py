@@ -24,9 +24,10 @@ The Data Model and Backend
 import logging
 
 
-from config import Config
-from trac_server import TracServer
-from git_repository import GitRepository
+from .config import Config
+from .trac_server import TracServer
+from .git_repository import GitRepository
+from .sage_installation import SageInstallation
 
 
 class Model:
@@ -45,7 +46,6 @@ class Model:
         self.trac.database.save(self.config.sageui_directory)
 
     def sage_installation(self, sage_root):
-        from sage_installation import SageInstallation
         return SageInstallation(sage_root)
 
     def list_branches(self):

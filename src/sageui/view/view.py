@@ -69,7 +69,7 @@ class View(object):
         gtk.main_quit()
 
     def xdg_open(self, file_or_uri):
-        from xdg_open import xdg_open
+        from .xdg_open import xdg_open
         xdg_open(file_or_uri, self.presenter)
 
     ##################################################################
@@ -78,7 +78,7 @@ class View(object):
     @cached_property
     def commandline_window(self):
         self.commandline_window_constructed = True
-        from commandline_window import CommandlineWindow
+        from .commandline_window import CommandlineWindow
         return CommandlineWindow(self.presenter, self.glade_file)
 
     def show_commandline_window(self, path, command):
@@ -96,7 +96,7 @@ class View(object):
     @cached_property
     def trac_window(self):
         self.trac_window_constructed = True
-        from trac_window import TracWindow
+        from .trac_window import TracWindow
         return TracWindow(self.presenter, self.glade_file)
         
     def show_trac_window(self):
@@ -113,7 +113,7 @@ class View(object):
     @cached_property
     def git_window(self):
         self.git_window_constructed = True
-        from git_window import GitWindow
+        from .git_window import GitWindow
         return GitWindow(self.presenter, self.glade_file)
         
     def show_git_window(self, repo_path):
@@ -151,7 +151,7 @@ class View(object):
     @cached_property
     def about_dialog(self):
         self.about_dialog_constructed = True
-        from about_dialog import AboutDialog
+        from .about_dialog import AboutDialog
         return AboutDialog(self.presenter, self.glade_file)
 
     def show_about_dialog(self):
@@ -168,7 +168,7 @@ class View(object):
     @cached_property
     def preferences_dialog(self):
         self.preferences_window_constructed = True
-        from preferences_dialog import PreferencesDialog
+        from .preferences_dialog import PreferencesDialog
         return PreferencesDialog(self.presenter, self.glade_file)
 
     def show_preferences_dialog(self, config):
@@ -187,7 +187,7 @@ class View(object):
     # Modal dialogs
 
     def new_notification_dialog(self, parent, text):
-        from notification_dialog import NotificationDialog
+        from .notification_dialog import NotificationDialog
         dlg = NotificationDialog(self.presenter, self.glade_file, text)
         dlg.window.set_transient_for(parent.window)
         assert self._modal_dialog is None
@@ -195,7 +195,7 @@ class View(object):
         return dlg
 
     def new_error_dialog(self, parent, title, text):
-        from error_dialog import ErrorDialog
+        from .error_dialog import ErrorDialog
         dlg = ErrorDialog(self.presenter, self.glade_file, title, text)
         dlg.window.set_transient_for(parent.window)
         assert self._modal_dialog is None
@@ -203,7 +203,7 @@ class View(object):
         return dlg
         
     def new_setup_assistant(self, parent, sage_root, callback):
-        from setup_assistant import SetupAssistant
+        from .setup_assistant import SetupAssistant
         dlg = SetupAssistant(self.presenter, self.glade_file, sage_root, callback)
         if parent is not None:
             # parent is allowed to be none if running at the first start

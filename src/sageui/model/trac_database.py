@@ -25,10 +25,10 @@ local database nor are they always up to date, of course.
 
 
 
-import cPickle
 import os
+import pickle
 
-from trac_ticket import TracTicket, TracTicket_class
+from .trac_ticket import TracTicket, TracTicket_class
 
 
 
@@ -41,20 +41,20 @@ class TracDatabase(object):
         filename = os.path.join(directory_name,
         'trac_database.pickle') 
         try:
-            with open(filename, 'wb') as pickle:
-                cPickle.dump(self._data, pickle)
+            with open(filename, 'wb') as f:
+                pickle.dumps(self._data, f)
             return True
-        except (IOError, OSError, cPickle.UnpicklingError, TypeError):
+        except (IOError, OSError, pickle.UnpicklingError, TypeError):
             self._data = dict()
             return False
         
     def load(self, directory_name):
         filename = os.path.join(directory_name, 'trac_database.pickle')
         try:
-            with open(filename, 'rb') as pickle:
-                self._data = cPickle.load(pickle)
+            with open(filename, 'rb') as f:
+                self._data = pickle.loads(f)
             return True
-        except (IOError, OSError, cPickle.UnpicklingError, TypeError):
+        except (IOError, OSError, pickle.UnpicklingError, TypeError):
             self._data = dict()
             return False
 

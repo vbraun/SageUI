@@ -92,7 +92,7 @@ class GitFileCommitted(GitFileABC):
             sage: repo = test.new_git_repo() 
             sage: repo.base_commit = repo.head.get_history()[-1]
             sage: git_file = repo.changes()[3]
-            sage: print git_file.diff()
+            sage: print(git_file.diff())
             diff --git a/foo4.txt b/foo4.txt
             new file mode 100644
             index 0000000..a53e390
@@ -121,7 +121,7 @@ class GitFileCommitted(GitFileABC):
             sage: repo = test.new_git_repo() 
             sage: repo.base_commit = repo.head.get_history()[-1]
             sage: git_file = repo.changes()[3]
-            sage: print git_file.word_diff()
+            sage: print(git_file.word_diff())
             diff --git a/foo4.txt b/foo4.txt
             new file mode 100644
             index 0000000..a53e390

@@ -24,13 +24,11 @@ Window showing a Trac Ticket
 import logging
 
 import gtk 
-import gobject
-import pango
-from gtksourceview2 import View as GtkSourceView
+from gi.repository import GObject, Pango
 
-from buildable import Buildable
-from window import Window
-from terminal_widget import TerminalWidget
+from .buildable import Buildable
+from .window import Window
+from .terminal_widget import TerminalWidget
 
 
 
@@ -40,11 +38,11 @@ class TracWindowUpdater(object):
     def __init__(self, trac_window, timeout=1):
         self.trac_window = trac_window
         self.counter = 0
-        gobject.timeout_add_seconds(timeout, self.callback)
+        GObject.timeout_add_seconds(timeout, self.callback)
 
     def callback(self):
         self.counter += 1
-        #print 'updating trac window', str(self.counter)
+        logging.debug('updating trac window, counter=%s', self.counter)
         if not self.trac_window.window.get_visible():
             return False
         self.trac_window.update_ticket_age()
@@ -92,7 +90,7 @@ class TracWindow(Buildable, Window):
 
         # create a CellRenderers to render the data
         self.cell_title = gtk.CellRendererText()
-        self.cell_title.set_property('ellipsize', pango.ELLIPSIZE_END)
+        self.cell_title.set_property('ellipsize', Pango.ELLIPSIZE_END)
         self.cell_time = gtk.CellRendererText()
         
         # add the cells to the columns - 2 in the first
@@ -108,37 +106,38 @@ class TracWindow(Buildable, Window):
     def _init_comments(self, comments):
         color = gtk.gdk.color_parse('#F0EAD6')
         comments.modify_base(gtk.STATE_NORMAL, color)
+        buf = comments.get_buffer()
         tag_table = comments.get_buffer().get_tag_table()
-        tag = gtk.TextTag('warning')
+        tag = buf.create_tag('warning')
         tag.set_property('foreground', 'red')
-        tag_table.add(tag)
-        tag = gtk.TextTag('label')
+        #tag_table.add(tag)
+        tag = buf.create_tag('label')
         tag.set_property('foreground', 'blue')
-        tag.set_property('style', pango.STYLE_ITALIC)
-        tag_table.add(tag)
-        tag = gtk.TextTag('description')
+        tag.set_property('style', Pango.STYLE_ITALIC)
+        #tag_table.add(tag)
+        tag = buf.create_tag('description')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
         tag.set_property('wrap-mode', gtk.WRAP_WORD)
-        tag_table.add(tag)
-        tag = gtk.TextTag('trac_field')
+        #tag_table.add(tag)
+        tag = buf.create_tag('trac_field')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
-        tag.set_property('weight', pango.WEIGHT_SEMIBOLD)
-        tag_table.add(tag)
-        tag = gtk.TextTag('comment')
+        tag.set_property('weight', Pango.WEIGHT_SEMIBOLD)
+        #tag_table.add(tag)
+        tag = buf.create_tag('comment')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
         tag.set_property('wrap-mode', gtk.WRAP_WORD)
-        tag_table.add(tag)
-        tag = gtk.TextTag('title')
+        #tag_table.add(tag)
+        tag = buf.create_tag('title')
         tag.set_property('foreground', 'black')
-        tag.set_property('weight', pango.WEIGHT_BOLD)
-        tag.set_property('scale', pango.SCALE_X_LARGE)
-        tag_table.add(tag)
-        tag = gtk.TextTag('debug')
+        tag.set_property('weight', Pango.WEIGHT_BOLD)
+        tag.set_property('scale', 1.2 * 1.2)
+        #tag_table.add(tag)
+        tag = buf.create_tag('debug')
         tag.set_property('wrap-mode', gtk.WRAP_WORD)
-        tag_table.add(tag)
+        #tag_table.add(tag)
 
     def show(self):
         super(TracWindow, self).show()
@@ -269,7 +268,7 @@ class TracWindow(Buildable, Window):
          self.presenter.hide_trac_window()
 
     def on_trac_window_map(self, widget, data=None):
-        print 'trac window map'
+        logging.info('trac window map')
 
     def on_trac_menu_new_activate(self, widget, data=None):
         self.presenter.show_notification(self, "todo: trac new ticket")

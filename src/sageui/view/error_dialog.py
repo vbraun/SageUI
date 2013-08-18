@@ -21,8 +21,8 @@ Generic Error Dialog
 ##############################################################################
 
  
-from window import Window
-from buildable import Buildable
+from .window import Window
+from .buildable import Buildable
 
 
 class ErrorDialog(Buildable, Window):

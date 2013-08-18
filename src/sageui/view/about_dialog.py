@@ -20,8 +20,8 @@ About Dialog
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
  
-from window import Window
-from buildable import Buildable
+from .window import Window
+from .buildable import Buildable
 
 
 class AboutDialog(Buildable, Window):

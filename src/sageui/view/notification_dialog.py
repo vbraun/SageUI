@@ -24,8 +24,8 @@ only be used as placeholder for future functionality.
 ##############################################################################
 
  
-from window import Window
-from buildable import Buildable
+from .window import Window
+from .buildable import Buildable
 
 
 class NotificationDialog(Buildable, Window):

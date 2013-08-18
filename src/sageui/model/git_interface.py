@@ -57,7 +57,7 @@ import subprocess
 
 from sageui.misc.cached_property import cached_property
 
-from git_error import GitError, DetachedHeadException, UserEmailException
+from .git_error import GitError, DetachedHeadException, UserEmailException
 
 
 
@@ -364,7 +364,7 @@ class GitInterface(object):
     def _log(self, prefix, log):
         if self._verbose:
             for line in log.splitlines():
-                print 'DEBUG '+prefix+': '+line
+                print('DEBUG '+prefix+': '+line)
 
     def _run_unsafe(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None):
         r"""
@@ -404,7 +404,7 @@ class GitInterface(object):
             (0, None, None, 'git status')
         """ 
         s = [self.git_cmd, cmd]
-        for k, v in kwds.iteritems():
+        for k, v in kwds.items():
             if len(k) == 1:
                 k = '-' + k
             else:
@@ -433,6 +433,8 @@ class GitInterface(object):
         else:
             process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
         stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
         retcode = process.poll()
         if stdout is not None and popen_stdout is subprocess.PIPE:
             self._log('stdout', stdout)

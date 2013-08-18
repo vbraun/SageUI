@@ -30,8 +30,9 @@ EXAMPLES::
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 
+from functools import total_ordering
 
-from git_commit import GitCommit
+from .git_commit import GitCommit
 
 
 def GitBranch(git_repository, name, commit=None):
@@ -60,6 +61,7 @@ def GitBranch(git_repository, name, commit=None):
     
 
 
+@total_ordering
 class GitBranchABC(object):
     """
     Base class for git branches
@@ -109,13 +111,17 @@ class GitBranchABC(object):
         key = (self.full_branch_name, self.commit.sha1)
         return hash(key)
 
-    def __cmp__(self, other):
-        c = cmp(type(self), type(other))
-        if c != 0:
-            return c
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
         self_key = (self.full_branch_name, self.commit.sha1)
         other_key = (other.full_branch_name, other.commit.sha1)
-        return cmp(self_key, other_key)
+        return self_key == other_key
+        
+    def __lt__(self, other):
+        self_key = (self.full_branch_name, self.commit.sha1)
+        other_key = (other.full_branch_name, other.commit.sha1)
+        return self_key < other_key
         
 
 class GitLocalBranch(GitBranchABC):

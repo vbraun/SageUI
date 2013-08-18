@@ -32,9 +32,9 @@ Git Window
 import gtk
 import pango
  
-from window import Window
-from buildable import Buildable
-from diff_viewer_widget import DiffViewerWidget
+from .window import Window
+from .buildable import Buildable
+from .diff_viewer_widget import DiffViewerWidget
 
 import logging
 

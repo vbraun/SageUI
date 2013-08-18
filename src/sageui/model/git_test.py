@@ -78,7 +78,7 @@ class TestBuilderGit(object):
                 subprocess.check_output(line, shell=True)
         finally:
             os.chdir(cwd)
-        from git_repository import GitRepository
+        from .git_repository import GitRepository
         repo = GitRepository(repo_path, verbose=verbose)
         repo.git._user_email_set = user_email_set
         return repo

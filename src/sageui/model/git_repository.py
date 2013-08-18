@@ -29,12 +29,13 @@ The managed branches are all named `sageui/1234/u/user/description`.
 
 import logging
 
-from git_commit import GitCommit
-from git_error import GitError, DetachedHeadException
-from git_branch import GitBranch, GitLocalBranch, GitManagedBranch
-from git_interface import GitInterface
-from git_file import GitFileDiff, GitFileCommitted, GitFileStaged, GitFileUnstaged, GitFileUntracked
 from sageui.misc.cached_property import cached_property
+
+from .git_commit import GitCommit
+from .git_error import GitError, DetachedHeadException
+from .git_branch import GitBranch, GitLocalBranch, GitManagedBranch
+from .git_interface import GitInterface
+from .git_file import GitFileDiff, GitFileCommitted, GitFileStaged, GitFileUnstaged, GitFileUntracked
 
 
 
@@ -193,7 +194,8 @@ class GitRepository(object):
             sage: repo.current_branch()
             Traceback (most recent call last):
             ...
-            DetachedHeadException: unexpectedly, git is in a detached HEAD state
+            sageui.model.git_error.DetachedHeadException: unexpectedly, 
+            git is in a detached HEAD state
             sage: repo.git.silent.checkout('master')
         """
         try:
@@ -222,7 +224,8 @@ class GitRepository(object):
             sage: repo.rename_branch('branch2', 'branch3')
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (128) when executing "git branch --move branch2 branch3"
+            sageui.model.git_error.GitError: git returned with 
+            non-zero exit code (128) when executing "git branch --move branch2 branch3"
                 STDERR: fatal: A branch named 'branch3' already exists.
         """
         self.git.branch(oldname, newname, move=True)

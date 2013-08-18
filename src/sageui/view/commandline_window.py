@@ -21,12 +21,14 @@ Window With a Terminal and the Sage Command Line
 ##############################################################################
 
 import os
-import gtk
-from gtksourceview2 import View as GtkSourceView
+import logging
 
-from buildable import Buildable
-from window import Window
-from terminal_widget import TerminalWidget
+import gtk
+from gi.repository.GtkSource import View as GtkSourceView
+
+from .buildable import Buildable
+from .window import Window
+from .terminal_widget import TerminalWidget
 
 
 class CommandlineWindow(Buildable, Window):
@@ -45,7 +47,7 @@ class CommandlineWindow(Buildable, Window):
         
     def run(self, path, command):
         exe = os.path.join(path, command)
-        self.terminal.reset(full=True, clear_history=False)
+        self.terminal.reset(True, False)
         self.terminal.fork_command(exe)
 
     def on_cmdline_window_delete_event(self, widget, data=None):
@@ -53,7 +55,7 @@ class CommandlineWindow(Buildable, Window):
         return False
 
     def on_cmdline_window_destroy(self, widget, data=None):
-        print 'TODO: destroyed. autosave?'
+        logging.info('TODO: destroyed. autosave?')
         
     def on_cmdline_window_map(self, widget, data=None):
         self.terminal.configure()

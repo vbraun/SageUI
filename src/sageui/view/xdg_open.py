@@ -26,7 +26,7 @@ Uses xdg-open if possible, and platform-specific workarounds on other systems.
 import os
 import sys
 import subprocess
-
+import logging
 
 
 
@@ -55,7 +55,7 @@ def _open_unix(file_or_uri, presenter, parent):
     except (IOError, OSError, RuntimeError) as err:
         presenter.show_error(str(type(err)), str(err))
         return
-    print 'xdg_open returned', rc
+    logging.info('xdg_open returned %s', rc)
     if rc == 0:
         return
     elif rc == 1:
