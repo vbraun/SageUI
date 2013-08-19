@@ -37,8 +37,8 @@ sys.path.append(sageui_path)
 for p in sys.path:
     print(p)
 
-from .terminal_widget import TerminalWidget
-from .diff_viewer_widget import DiffViewerWidget
+from terminal_widget import TerminalWidget
+from diff_viewer_widget import DiffViewerWidget
 
 
 

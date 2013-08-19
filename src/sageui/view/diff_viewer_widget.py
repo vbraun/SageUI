@@ -27,19 +27,18 @@ Slight misnomer as the widget can also show
 ##############################################################################
 
 
-import gtk
-import pango
+from gi.repository import Gdk, Gtk, Pango
 
 
-class DiffViewerWidget(gtk.TextView):
+class DiffViewerWidget(Gtk.TextView):
     __gtype_name__ = 'DiffViewerWidget'
  
     def __init__(self, *args, **kwds):
         super(DiffViewerWidget, self).__init__(*args, **kwds)
         self.set_editable(False)
         self.set_cursor_visible(False)
-        self.color_plus = gtk.gdk.color_parse('#ddffdd')
-        self.color_minus = gtk.gdk.color_parse('#ffdddd')
+        self.color_plus = Gdk.color_parse('#ddffdd')
+        self.color_minus = Gdk.color_parse('#ffdddd')
         self._init_tag_table()
 
     def _init_tag_table(self):
@@ -75,7 +74,7 @@ class DiffViewerWidget(gtk.TextView):
         """
         buf = self.get_buffer()
         buf.set_text('')
-        warning = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_DIALOG);
+        warning = self.render_icon(Gtk.STOCK_DIALOG_ERROR, Gtk.IconSize.DIALOG);
         buf.insert_pixbuf(buf.get_start_iter(), warning)
         buf.insert(buf.get_end_iter(), '    No diff available, file is binary or untracked.')
 

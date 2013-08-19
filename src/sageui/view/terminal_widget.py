@@ -21,9 +21,8 @@ The drawing area widget for the page
 ##############################################################################
 
 import os
-import gtk
 
-from gi.repository import GLib, Vte
+from gi.repository import GLib, Gdk, Gtk, Vte
 
 
 class TerminalWidget(Vte.Terminal):
@@ -36,9 +35,8 @@ class TerminalWidget(Vte.Terminal):
         Vte.Terminal.__init__(self)
 
     def configure(self):
-        from gtk.gdk import color_parse
-        self.set_color_background(color_parse('white'))
-        self.set_color_foreground(color_parse('black'))
+        self.set_color_background(Gdk.color_parse('white'))
+        self.set_color_foreground(Gdk.color_parse('black'))
         #self.set_size(80, -1)
 
     def fork_command(self, executable):
