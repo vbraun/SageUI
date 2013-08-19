@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Add our custom widgets to glade3
@@ -27,7 +27,7 @@ import os
 import sys
 
 
-print 'terminal_plugin imported'
+print('Importing Sage plugins')
 
 gui_path = os.path.split(os.path.split(__file__)[0])[0]
 sys.path.append(gui_path)
@@ -35,10 +35,10 @@ sageui_path = os.path.split(os.path.split(gui_path)[0])[0]
 sys.path.append(sageui_path)
 
 for p in sys.path:
-    print p
+    print(p)
 
-from terminal_widget import TerminalWidget
-from diff_viewer_widget import DiffViewerWidget
+from .terminal_widget import TerminalWidget
+from .diff_viewer_widget import DiffViewerWidget
 
 
 

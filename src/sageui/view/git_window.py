@@ -101,11 +101,12 @@ class GitWindow(Buildable, Window):
         view.set_has_tooltip(True)
         view.connect("query-tooltip", self._files_tooltip_query)
              
-    def _files_tooltip_query(self, treeview, x, y, mode, tooltip):
-        context = treeview.get_tooltip_context(x, y, mode)
-        if context:
-            model, path, iter = context
-            name, git_file = model.get(iter, 0, 3)
+    def _files_tooltip_query(self, treeview, x, y, keyboard_tip, tooltip):
+        context = treeview.get_tooltip_context(x, y, keyboard_tip)
+        points_to_row = context[0]
+        if points_to_row:
+            iter = context[-1]
+            name, git_file = treeview.get_model().get(iter, 0, 3)
             tooltip.set_icon_from_stock(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
             tooltip.set_text(str(git_file))
             return True
@@ -155,7 +156,6 @@ class GitWindow(Buildable, Window):
         if git_commit_list is None:
             return
         for c in git_commit_list:
-            #print c, c.title, c.sha1
             self.base_store.append([c.title, c.short_sha1, c])
         self.base_view.set_model(self.base_store)
         self._base_view_ignore_next_change = True
@@ -220,8 +220,10 @@ class GitWindow(Buildable, Window):
     
     def on_git_files_view_cursor_changed(self, widget, data=None):
         sel = self.files_view.get_selection()
-        logging.info('git files_view changed')
         _, iter = sel.get_selected()
+        if iter is None:
+            return
+        logging.info('git files_view changed')
         git_file = self.files_store.get_value(iter, 3)
         self.presenter.git_file_selected(git_file)
         

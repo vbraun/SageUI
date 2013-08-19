@@ -73,6 +73,8 @@ def debug_shell(app):
     ip.start()
 
 
+
+
 def launch_gui(debug=False):
     check_gui_prerequisites()
     from sageui.app import Application
@@ -81,6 +83,10 @@ def launch_gui(debug=False):
         debug_shell(app)
     else:
         import gtk
+        # workaround for https://bugzilla.gnome.org/show_bug.cgi?id=622084
+        import signal
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        # end workaround
         gtk.main()
 
 

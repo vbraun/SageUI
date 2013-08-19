@@ -43,18 +43,15 @@ class DiffViewerWidget(gtk.TextView):
         self._init_tag_table()
 
     def _init_tag_table(self):
-        tag_table = self.get_buffer().get_tag_table()
-        tag = gtk.TextTag('default')
+        buf = self.get_buffer()
+        tag = buf.create_tag('default')
         tag.set_property('family', 'monospace')
-        tag_table.add(tag)
-        tag = gtk.TextTag('plus')
+        tag = buf.create_tag('plus')
         tag.set_property('family', 'monospace')
         tag.set_property('background-gdk', self.color_plus)
-        tag_table.add(tag)
-        tag = gtk.TextTag('minus')
+        tag = buf.create_tag('minus')
         tag.set_property('family', 'monospace')
         tag.set_property('background-gdk', self.color_minus)
-        tag_table.add(tag)
 
     def clear(self):
         self.get_buffer().set_text('')

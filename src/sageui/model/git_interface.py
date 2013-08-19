@@ -433,12 +433,12 @@ class GitInterface(object):
         else:
             process = subprocess.Popen(s, stdout=popen_stdout, stderr=popen_stderr, env=env)
         stdout, stderr = process.communicate()
-        stdout = stdout.decode('utf-8')
-        stderr = stderr.decode('utf-8')
         retcode = process.poll()
         if stdout is not None and popen_stdout is subprocess.PIPE:
+            stdout = stdout.decode('utf-8')
             self._log('stdout', stdout)
         if stderr is not None and popen_stderr is subprocess.PIPE:
+            stderr = stderr.decode('utf-8')
             self._log('stderr', stderr)
         return {'exit_code':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':complete_cmd}
 

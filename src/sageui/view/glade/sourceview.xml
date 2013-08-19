@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <glade-catalog 
     name="sourceview2" 
-    library="gtksourceview-2.0" 
-    depends="gtk+">
+    library="gtksourceview-2.0">
 
   <glade-widget-classes>
     <glade-widget-class 

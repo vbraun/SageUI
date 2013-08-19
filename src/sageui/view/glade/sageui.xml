@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <glade-catalog 
     name="sageui"
-    library="gladepython" 
-    domain="glade-3" 
-    depends="gtk+">
+    library="gladepython">
 
   <init-function>glade_python_init</init-function>
 
