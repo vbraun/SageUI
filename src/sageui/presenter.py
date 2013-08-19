@@ -33,6 +33,7 @@ class Presenter(object):
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
         self.model = model_class(self)
+        self.view.restore_geometry(self.model.config)
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, None, self.setup_assistant_first_run_finished)
         else:
@@ -53,8 +54,9 @@ class Presenter(object):
         """
         Quit the program
         """
-        self.model.terminate()
+        self.view.save_geometry(self.model.config)
         self.view.terminate()
+        self.model.terminate()
         
     ###################################################################
     # The window containing the commandline terminal

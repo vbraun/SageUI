@@ -27,6 +27,18 @@ class Window(object):
     def __init__(self, builder, window_object_id):
         self.window = builder.get_object(window_object_id)
 
+    def save_geometry(self):
+        x, y = self.window.get_size()
+        geometry = dict()
+        geometry['x'] = x
+        geometry['y'] = y
+        return geometry
+        
+    def restore_geometry(self, geometry_dict={}):
+        x = geometry_dict.get('x', 1024)
+        y = geometry_dict.get('y',  600)
+        self.window.resize(x, y)
+
     def show(self):
         """
         Show window. 

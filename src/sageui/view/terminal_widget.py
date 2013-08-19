@@ -37,7 +37,7 @@ class TerminalWidget(Vte.Terminal):
     def configure(self):
         self.set_color_background(Gdk.color_parse('white'))
         self.set_color_foreground(Gdk.color_parse('black'))
-        #self.set_size(80, -1)
+        self.set_size_request(80*self.char_width, -1)
 
     def fork_command(self, executable):
         return self.fork_command_full(

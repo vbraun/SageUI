@@ -53,6 +53,22 @@ class View(object):
         self.git_window_constructed = False
         self.about_dialog_constructed = False
         self.preferences_window_constructed = False
+        self.window_geometry = dict()
+
+    def save_geometry(self, config):
+        geometry = self.window_geometry
+        if self.trac_window_constructed:
+            geometry['trac_window'] = self.trac_window.save_geometry()
+        if self.git_window_constructed:
+            geometry['git_window'] = self.git_window.save_geometry()
+        if self.about_dialog_constructed:
+            geometry['about_dialog'] = self.about_dialog.save_geometry()
+        if self.preferences_window_constructed:
+            geometry['preferences_window'] = self.preferences_window.save_geometry()
+        config.window_geometry = geometry
+
+    def restore_geometry(self, config):
+        self.window_geometry.update(config.window_geometry)
         
     def have_open_window(self):
         return len(self._open_windows) != 0
@@ -97,7 +113,9 @@ class View(object):
     def trac_window(self):
         self.trac_window_constructed = True
         from .trac_window import TracWindow
-        return TracWindow(self.presenter, self.glade_file)
+        trac = TracWindow(self.presenter, self.glade_file)
+        trac.restore_geometry(self.window_geometry.get('trac_window', {}))
+        return trac
         
     def show_trac_window(self):
         self._open_windows.add(self.trac_window)
@@ -114,7 +132,9 @@ class View(object):
     def git_window(self):
         self.git_window_constructed = True
         from .git_window import GitWindow
-        return GitWindow(self.presenter, self.glade_file)
+        git = GitWindow(self.presenter, self.glade_file)
+        git.restore_geometry(self.window_geometry.get('git_window', {}))
+        return git
         
     def show_git_window(self, repo_path):
         self._open_windows.add(self.git_window)
@@ -152,7 +172,9 @@ class View(object):
     def about_dialog(self):
         self.about_dialog_constructed = True
         from .about_dialog import AboutDialog
-        return AboutDialog(self.presenter, self.glade_file)
+        about = AboutDialog(self.presenter, self.glade_file)
+        about.restore_geometry(self.window_geometry.get('about_dialog', {}))
+        return about
 
     def show_about_dialog(self):
         self._open_windows.add(self.about_dialog)
@@ -169,7 +191,9 @@ class View(object):
     def preferences_dialog(self):
         self.preferences_window_constructed = True
         from .preferences_dialog import PreferencesDialog
-        return PreferencesDialog(self.presenter, self.glade_file)
+        prefs = PreferencesDialog(self.presenter, self.glade_file)
+        prefs.restore_geometry(self.window_geometry.get('preferences_dialog', {}))
+        return prefs
 
     def show_preferences_dialog(self, config):
         self._open_windows.add(self.preferences_dialog)

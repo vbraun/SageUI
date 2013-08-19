@@ -94,3 +94,15 @@ class Config(object):
     def sage_version(self, value):
         self._data['sage_version'] = value
         self._save()
+
+    @property 
+    def window_geometry(self):
+        return self._data.get('window_geometry', {})
+
+    @window_geometry.setter
+    def window_geometry(self, value):
+        self._data['window_geometry'] = value
+        self._save()
+
+        
+    
