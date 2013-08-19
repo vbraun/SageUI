@@ -48,12 +48,12 @@ def check_gui_prerequisites():
 
 
 def debug_shell(app):
-    from IPython.lib.inputhook import enable_gtk
-    enable_gtk()
+    from IPython.lib.inputhook import enable_gtk3
+    enable_gtk3()
     from IPython.frontend.terminal.ipapp import TerminalIPythonApp
     ip = TerminalIPythonApp.instance()
     ip.initialize(argv=[])
-    ip.shell.enable_gui('gtk')
+    ip.shell.enable_gui('gtk3')
     ip.shell.user_global_ns['app'] = app
     ip.shell.user_global_ns['repo'] = app.model.repo
     ip.shell.user_global_ns['git'] = app.model.repo.git
