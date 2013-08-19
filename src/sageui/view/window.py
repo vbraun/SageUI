@@ -51,3 +51,17 @@ class Window(object):
         return self.window.destroy()
 
 
+
+class DialogWindow(Window):
+    
+    def set_transient_for(self, parent_window):
+        """
+        Place on top of ``parent_window``
+
+        INPUT
+        
+        - ``parent_window`` -- A :class:`Window` instance.
+        """
+        self.window.set_transient_for(parent_window.window)
+
+    

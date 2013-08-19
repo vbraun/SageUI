@@ -23,7 +23,7 @@ Window With a Terminal and the Sage Command Line
 import os
 import logging
 
-import gtk
+from gi.repository import Gtk
 from gi.repository.GtkSource import View as GtkSourceView
 
 from .buildable import Buildable

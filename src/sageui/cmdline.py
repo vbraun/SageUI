@@ -31,18 +31,10 @@ import logging
 
 def check_gui_prerequisites():
     try:
-        from gi import pygtkcompat
-        pygtkcompat.enable() 
-        pygtkcompat.enable_gtk(version='3.0')
-        import gtk
+        from gi.repository import Gtk
     except ImportError:
         logging.critical('You need the Python GTK interface!')
         sys.exit(1)
-    #try:
-    #    import gtk.glade
-    #except ImportError:
-    #    logging.critical('You need the Python Glade interface!')
-    #    sys.exit(1)
     try:
         import cairo
     except ImportError:
@@ -82,12 +74,12 @@ def launch_gui(debug=False):
     if debug:
         debug_shell(app)
     else:
-        import gtk
+        from gi.repository import Gtk
         # workaround for https://bugzilla.gnome.org/show_bug.cgi?id=622084
         import signal
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         # end workaround
-        gtk.main()
+        Gtk.main()
 
 
 

@@ -36,7 +36,7 @@ dialogs. They are treated slighty differently:
 
 import os
 import sys
-import gtk
+from gi.repository import Gtk
 
 from sageui.misc.cached_property import cached_property
 
@@ -66,7 +66,7 @@ class View(object):
         return os.path.join(self.resource_dir, 'res', 'SageUI.xml')
         
     def terminate(self):
-        gtk.main_quit()
+        Gtk.main_quit()
 
     def xdg_open(self, file_or_uri):
         from .xdg_open import xdg_open
@@ -189,7 +189,7 @@ class View(object):
     def new_notification_dialog(self, parent, text):
         from .notification_dialog import NotificationDialog
         dlg = NotificationDialog(self.presenter, self.glade_file, text)
-        dlg.window.set_transient_for(parent.window)
+        dlg.set_transient_for(parent)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
@@ -197,7 +197,7 @@ class View(object):
     def new_error_dialog(self, parent, title, text):
         from .error_dialog import ErrorDialog
         dlg = ErrorDialog(self.presenter, self.glade_file, title, text)
-        dlg.window.set_transient_for(parent.window)
+        dlg.set_transient_for(parent)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg
@@ -207,7 +207,7 @@ class View(object):
         dlg = SetupAssistant(self.presenter, self.glade_file, sage_root, callback)
         if parent is not None:
             # parent is allowed to be none if running at the first start
-            dlg.window.set_transient_for(parent.window)
+            dlg.set_transient_for(parent)
         assert self._modal_dialog is None
         self._modal_dialog = dlg
         return dlg

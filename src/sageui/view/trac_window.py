@@ -23,8 +23,7 @@ Window showing a Trac Ticket
 
 import logging
 
-import gtk 
-from gi.repository import GObject, Pango
+from gi.repository import GObject, Gdk, Gtk, Pango
 
 from .buildable import Buildable
 from .window import Window
@@ -80,18 +79,18 @@ class TracWindow(Buildable, Window):
         self.current_ticket = None
 
     def _init_ticketlist(self, listview):
-        listview.get_selection().set_mode(gtk.SELECTION_BROWSE)
+        listview.get_selection().set_mode(Gtk.SelectionMode.BROWSE)
 
         # add two columns
-        self.col_title = gtk.TreeViewColumn('Description')
-        self.col_time = gtk.TreeViewColumn('Last seen')
+        self.col_title = Gtk.TreeViewColumn('Description')
+        self.col_time = Gtk.TreeViewColumn('Last seen')
         listview.append_column(self.col_title)
         listview.append_column(self.col_time)
 
         # create a CellRenderers to render the data
-        self.cell_title = gtk.CellRendererText()
-        self.cell_title.set_property('ellipsize', Pango.ELLIPSIZE_END)
-        self.cell_time = gtk.CellRendererText()
+        self.cell_title = Gtk.CellRendererText()
+        self.cell_title.set_property('ellipsize', Pango.EllipsizeMode.END)
+        self.cell_time = Gtk.CellRendererText()
         
         # add the cells to the columns - 2 in the first
         self.col_title.pack_start(self.cell_title, True)
@@ -104,33 +103,33 @@ class TracWindow(Buildable, Window):
         #self.col_time.set_expand(True)
 
     def _init_comments(self, comments):
-        color = gtk.gdk.color_parse('#F0EAD6')
-        comments.modify_base(gtk.STATE_NORMAL, color)
+        color = Gdk.color_parse('#F0EAD6')
+        comments.modify_base(Gtk.StateType.NORMAL, color)
         buf = comments.get_buffer()
         tag_table = comments.get_buffer().get_tag_table()
         tag = buf.create_tag('warning')
         tag.set_property('foreground', 'red')
         tag = buf.create_tag('label')
         tag.set_property('foreground', 'blue')
-        tag.set_property('style', Pango.STYLE_ITALIC)
+        tag.set_property('style', Pango.Style.ITALIC)
         tag = buf.create_tag('description')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
-        tag.set_property('wrap-mode', gtk.WRAP_WORD)
+        tag.set_property('wrap-mode', Gtk.WrapMode.WORD)
         tag = buf.create_tag('trac_field')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
-        tag.set_property('weight', Pango.WEIGHT_SEMIBOLD)
+        tag.set_property('weight', Pango.Weight.SEMIBOLD)
         tag = buf.create_tag('comment')
         tag.set_property('foreground', 'black')
         tag.set_property('family', 'monospace')
-        tag.set_property('wrap-mode', gtk.WRAP_WORD)
+        tag.set_property('wrap-mode', Gtk.WrapMode.WORD)
         tag = buf.create_tag('title')
         tag.set_property('foreground', 'black')
-        tag.set_property('weight', Pango.WEIGHT_BOLD)
+        tag.set_property('weight', Pango.Weight.BOLD)
         tag.set_property('scale', 1.2 * 1.2)
         tag = buf.create_tag('debug')
-        tag.set_property('wrap-mode', gtk.WRAP_WORD)
+        tag.set_property('wrap-mode', Gtk.WrapMode.WORD)
 
     def show(self):
         super(TracWindow, self).show()

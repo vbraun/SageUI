@@ -21,7 +21,7 @@ Abstract base for (gtk-)buildable things
 ##############################################################################
 
 
-import gtk
+from gi.repository import Gtk
 
 
 class Buildable(object):
@@ -30,7 +30,7 @@ class Buildable(object):
         self._object_ids = object_ids
 
     def get_builder(self, glade_file):
-        builder = gtk.Builder()
+        builder = Gtk.Builder()
         builder.add_objects_from_file(glade_file, self._object_ids)
         return builder
     

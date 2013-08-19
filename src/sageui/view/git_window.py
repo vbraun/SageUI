@@ -29,8 +29,8 @@ Git Window
 ##############################################################################
 
 
-import gtk
-import pango
+from gi.repository import Gtk
+from gi.repository import Pango
  
 from .window import Window
 from .buildable import Buildable
@@ -74,27 +74,25 @@ class GitWindow(Buildable, Window):
 
     def _init_branch(self, view, store):
         branch = view.get_cells()[0]
-        #branch = gtk.CellRendererText()
-        #view.pack_start(branch, expand=True)
         view.add_attribute(branch, 'text', 1)  
-        ticket = gtk.CellRendererText()
+        ticket = Gtk.CellRendererText()
         ticket.set_property('xalign', 0)
-        view.pack_end(ticket, expand=False)
+        view.pack_end(ticket, False)
         view.add_attribute(ticket, 'text', 2)  
         view.set_entry_text_column(1)
 
     def _init_base(self, view, store):
-        name = gtk.CellRendererText()
-        view.pack_start(name, expand=True)
+        name = Gtk.CellRendererText()
+        view.pack_start(name, True)
         view.add_attribute(name, 'text', 0)  
 
     def _init_files(self, view, store):
-        view.get_selection().set_mode(gtk.SELECTION_BROWSE)
-        col = gtk.TreeViewColumn('Changed files')
+        view.get_selection().set_mode(Gtk.SelectionMode.BROWSE)
+        col = Gtk.TreeViewColumn('Changed files')
         view.append_column(col)
-        name = gtk.CellRendererText()
-        name.set_property('ellipsize', pango.ELLIPSIZE_START)
-        col.pack_start(name, expand=True)
+        name = Gtk.CellRendererText()
+        name.set_property('ellipsize', Pango.EllipsizeMode.START)
+        col.pack_start(name, True)
         col.add_attribute(name, 'text', 0)  
         col.add_attribute(name, 'cell_background', 1)  
         col.add_attribute(name, 'strikethrough', 2)  
@@ -107,7 +105,7 @@ class GitWindow(Buildable, Window):
         if points_to_row:
             iter = context[-1]
             name, git_file = treeview.get_model().get(iter, 0, 3)
-            tooltip.set_icon_from_stock(gtk.STOCK_FILE, gtk.ICON_SIZE_MENU)
+            tooltip.set_icon_from_stock(Gtk.STOCK_FILE, Gtk.IconSize.MENU)
             tooltip.set_text(str(git_file))
             return True
         return False
