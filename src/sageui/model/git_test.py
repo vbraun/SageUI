@@ -23,6 +23,23 @@ Build a new git repo for doctests
 
 POPULATE_GIT_REPO = """
 git init .
+
+# create conflicting branches
+echo 'version 0' > file.txt
+git add file.txt
+git commit -m 'initial commit'
+git checkout -q -b branch1
+echo 'version branch 1' > file.txt
+git add file.txt
+git commit -m 'branch 2 is here'
+git checkout -q master
+git checkout -q -b branch2
+echo 'version branch 2' > file.txt
+git add file.txt
+git commit -m 'branch 2 conflicts branch 1'
+git checkout -q master 
+
+# a bunch of branches
 echo '123' > foo1.txt && git add . && git commit -m 'initial commit'
 git checkout -q -b 'my_branch'
 echo '234' > foo2.txt && git add . && git commit -m 'second commit'
@@ -37,6 +54,8 @@ git checkout -q -b 'sageui/1001/u/bob/work'
 echo '567' > foo5.txt && git add . && git commit -m 'fifth commit'
 git checkout -q -b 'sageui/1001/u/alice/work'
 mkdir 'bar' && echo '678' > bar/foo6.txt && git add bar && git commit -m 'sixth commit'
+
+# finally, some changes to the working tree
 git checkout -q -b 'sageui/1002/public/anything'
 touch staged_file && git add staged_file
 echo 'another line' >> foo4.txt

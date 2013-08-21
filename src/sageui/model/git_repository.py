@@ -165,8 +165,8 @@ class GitRepository(object):
 
             sage: repo = test.git_repo()
             sage: repo.local_branches()
-            [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
-        """
+            [Git branch branch1, Git branch branch2, Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
+       """
         branches = self.git.for_each_ref(
             'refs/heads/', sort='committerdate', format="%(objectname) %(refname:short)")
         result = []
@@ -203,7 +203,7 @@ class GitRepository(object):
         except GitError as e:
             if e.exit_code == 1:
                raise DetachedHeadException()
-            raise
+            raise e
         return GitBranch(self, branch_string)
 
     def rename_branch(self, oldname, newname):
@@ -215,18 +215,18 @@ class GitRepository(object):
         Create some branches::
 
             sage: repo = test.new_git_repo()
-            sage: repo.git.silent.branch('branch1')
-            sage: repo.git.silent.branch('branch2')
+            sage: repo.git.silent.branch('branchA')
+            sage: repo.git.silent.branch('branchB')
 
         Rename some branches::
 
-            sage: repo.rename_branch('branch1', 'branch3')
-            sage: repo.rename_branch('branch2', 'branch3')
+            sage: repo.rename_branch('branchA', 'branchC')
+            sage: repo.rename_branch('branchB', 'branchC')
             Traceback (most recent call last):
             ...
             sageui.model.git_error.GitError: git returned with 
-            non-zero exit code (128) when executing "git branch --move branch2 branch3"
-                STDERR: fatal: A branch named 'branch3' already exists.
+            non-zero exit code (128) when executing "git branch --move branchB branchC"
+                STDERR: fatal: A branch named 'branchC' already exists.
         """
         self.git.branch(oldname, newname, move=True)
 

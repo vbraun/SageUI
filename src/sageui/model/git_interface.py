@@ -6,26 +6,22 @@ a raw wrapper around calls to git and retuns the output as strings.
 
 EXAMPLES::
 
-    sage: globals()
-
     sage: git._check_user_email()
-    DEBUG cmd: git config user.name
-    DEBUG cmd: git config user.email
+
 
     sage: git.execute('status', porcelain=True)
     DEBUG cmd: git status --porcelain
-    DEBUG stdout: ?? untracked
-    '?? untracked\n'
+    DEBUG stdout:  M foo4.txt
+    DEBUG stdout: A  staged_file
+    DEBUG stdout: ?? untracked_file
+    ' M foo4.txt\nA  staged_file\n?? untracked_file\n'
 
     sage: git.status(porcelain=True)
     DEBUG cmd: git status --porcelain
-    DEBUG stdout: ?? untracked
-    '?? untracked\n'
-
-    sage: git.untracked_files()
-    DEBUG cmd: git ls-files --exclude-standard --other
-    DEBUG stdout: untracked
-    ['untracked']
+    DEBUG stdout:  M foo4.txt
+    DEBUG stdout: A  staged_file
+    DEBUG stdout: ?? untracked_file
+    ' M foo4.txt\nA  staged_file\n?? untracked_file\n'
 """
 
 ##############################################################################
@@ -121,9 +117,25 @@ class GitInterface(object):
 
     EXAMPLES::
 
-        >>> git   # doctest: +ELLIPSIS
+        sage: git
         Interface to git repo at /.../git_repo
     """
+
+    # commands that cannot change the repository even with
+    # some crazy flags set - these commands should be safe
+    _safe_commands = (
+        'config',    'diff',   'grep',       'log', 
+        'ls_remote', 'remote', 'reset',      'show', 
+        'show_ref',  'status', 'symbolic_ref' )
+        
+    _unsafe_commands = (
+        'add',          'am',       'apply',       'bisect',
+        'branch',       'checkout', 'cherry_pick', 'clean',
+        'clone',        'commit',   'fetch',       'for_each_ref',
+        'format_patch', 'init',     'ls_files',    'merge',
+        'mv',           'pull',     'push',        'rebase',
+        'rev_list',     'rm',       'stash',       'tag'
+    )
 
     def __init__(self, repository_path, verbose=False, git_dir=None, git_cmd=None):
         self._verbose = verbose
@@ -144,7 +156,7 @@ class GitInterface(object):
         
         EXAMPLES::
 
-            >>> git.git_cmd
+            sage: git.git_cmd
             'git'
         """
         return self._git_cmd
@@ -160,7 +172,7 @@ class GitInterface(object):
 
         EXAMPLES::
 
-            >>> git.git_dir  # doctest: +ELLIPSIS
+            sage: git.git_dir
             '/.../git_repo/.git'
         """
         return self._git_dir
@@ -176,7 +188,7 @@ class GitInterface(object):
 
         EXAMPLES::
 
-            >>> git.work_tree # doctest: +ELLIPSIS
+            sage: git.work_tree
             '/.../git_repo'
         """
         return self._work_tree
@@ -187,7 +199,7 @@ class GitInterface(object):
         
         TESTS::
 
-            >>> repr(git)   # doctest: +ELLIPSIS
+            sage: repr(git)
             'Interface to git repo at /.../git_repo'
         """
         return 'Interface to git repo at '+self.work_tree
@@ -204,72 +216,80 @@ class GitInterface(object):
 
         EXAMPLES:
 
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create two conflicting branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: with open("file","w") as f: f.write("version 0")
-            sage: git.add("file")
-            sage: git.commit(SUPER_SILENT, "-m","initial commit")
-            sage: git.checkout(SUPER_SILENT, "-b","branch1")
-            sage: with open("file","w") as f: f.write("version 1")
-            sage: git.commit(SUPER_SILENT, "-am","second commit")
-            sage: git.checkout(SUPER_SILENT, "master")
-            sage: git.checkout(SUPER_SILENT, "-b","branch2")
-            sage: with open("file","w") as f: f.write("version 2")
-            sage: git.commit(SUPER_SILENT, "-am","conflicting commit")
-
         A ``merge`` state::
-
-            sage: git.checkout(SUPER_SILENT, "branch1")
-            sage: git.merge(SUPER_SILENT, 'branch2')
+        
+            sage: git = test.new_git_repo().git
+            sage: git.silent.reset(hard=True)
+            sage: git.silent.checkout("branch1")
+            sage: git.silent.merge('branch2')
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (1)
+            sageui.model.git_error.GitError: git returned with non-zero exit code (1) 
+            when executing "git merge branch2"
+                STDOUT: Auto-merging file.txt
+                STDOUT: CONFLICT (content): Merge conflict in file.txt
+                STDOUT: Automatic merge failed; fix conflicts and then commit the result.
+
             sage: git.get_state()
             ('merge',)
-            sage: git.merge(SUPER_SILENT,abort=True)
+            sage: git.silent.merge(abort=True)
             sage: git.get_state()
             ()
 
         A ``rebase`` state::
 
-            sage: git.execute_supersilent('rebase', 'branch2')
+            sage: git.rebase('branch2')
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (1)
+            sageui.model.git_error.GitError: git returned with non-zero exit code (1) 
+            when executing "git rebase branch2"
+                STDOUT: First, rewinding head to replay your work on top of it...
+                STDOUT: Applying: branch 2 is here
+                STDOUT: Using index info to reconstruct a base tree...
+                STDOUT: M	file.txt
+                STDOUT: Falling back to patching base and 3-way merge...
+                STDOUT: Auto-merging file.txt
+                STDOUT: CONFLICT (content): Merge conflict in file.txt
+                STDOUT: Patch failed at 0001 branch 2 is here
+                STDOUT: The copy of the patch that failed is found in:
+                STDOUT:    /.../git_repo/.git/rebase-apply/patch
+                STDOUT: 
+                STDOUT: When you have resolved this problem, run "git rebase --continue".
+                STDOUT: If you prefer to skip this patch, run "git rebase --skip" instead.
+                STDOUT: To check out the original branch and stop rebasing, run "git rebase --abort".
+                STDOUT: 
+                STDERR: Failed to merge in the changes.
+        
             sage: git.get_state()
             ('rebase',)
-            sage: git.rebase(SUPER_SILENT, abort=True)
+            sage: git.silent.rebase(abort=True)
             sage: git.get_state()
             ()
 
         A merge within an interactive rebase::
 
-            sage: git.rebase(SUPER_SILENT, 'HEAD^', interactive=True, env={'GIT_SEQUENCE_EDITOR':'sed -i s+pick+edit+'})
+            sage: git.rebase('HEAD^', interactive=True, env={'GIT_SEQUENCE_EDITOR':'sed -i s+pick+edit+'})
+            'Rebasing (1/1)\r'
             sage: git.get_state()
             ('rebase-i',)
-            sage: git.merge(SUPER_SILENT, 'branch2')
+            sage: git.merge('branch2')
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (1)
+            sageui.model.git_error.GitError: git returned with non-zero exit code (1)
+            when executing "git merge branch2"
+                STDOUT: Auto-merging file.txt
+                STDOUT: CONFLICT (content): Merge conflict in file.txt
+                STDOUT: Automatic merge failed; fix conflicts and then commit the result.
+
             sage: git.get_state()
             ('merge', 'rebase-i')
-            sage: git.rebase(SUPER_SILENT, abort=True)
+            sage: git.silent.rebase(abort=True)
             sage: git.get_state()
             ()
         """
         # logic based on zsh's git backend for vcs_info
         opj = os.path.join
-        p = lambda x: opj(self._dot_git, x)
+        p = lambda x: opj(self.git_dir, x)
         ret = []
         for d in map(p,("rebase-apply", "rebase", opj("..",".dotest"))):
             if os.path.isdir(d):
@@ -305,45 +325,29 @@ class GitInterface(object):
 
         EXAMPLES:
 
-        Create a :class:`GitInterface` for doctesting::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: git = GitInterface(config["git"], DoctestUserInterface(config["UI"]))
-
-        Create two conflicting branches::
-
-            sage: os.chdir(config['git']['src'])
-            sage: with open("file","w") as f: f.write("version 0")
-            sage: git.add("file")
-            sage: git.commit(SUPER_SILENT, "-m","initial commit")
-            sage: git.checkout(SUPER_SILENT, "-b","branch1")
-            sage: with open("file","w") as f: f.write("version 1")
-            sage: git.commit(SUPER_SILENT, "-am","second commit")
-            sage: git.checkout(SUPER_SILENT, "master")
-            sage: git.checkout(SUPER_SILENT, "-b","branch2")
-            sage: with open("file","w") as f: f.write("version 2")
-            sage: git.commit(SUPER_SILENT, "-am","conflicting commit")
-
         A merge within an interactive rebase::
 
-            sage: git.checkout(SUPER_SILENT, "branch1")
-            sage: git.rebase(SUPER_SILENT, 'HEAD^', interactive=True, env={'GIT_SEQUENCE_EDITOR':'sed -i s+pick+edit+'})
+            sage: git = test.new_git_repo().git
+            sage: git.silent.reset(hard=True)
+            sage: git.silent.checkout("branch1")
+            sage: git.rebase('HEAD^', interactive=True, env={'GIT_SEQUENCE_EDITOR':'sed -i s+pick+edit+'})
+            'Rebasing (1/1)\r'
             sage: git.get_state()
             ('rebase-i',)
-            sage: git.merge(SUPER_SILENT, 'branch2')
+            sage: git.merge('branch2')
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (1)
+            sageui.model.git_error.GitError: git returned with non-zero exit code (1) 
+            when executing "git merge branch2"
+                STDOUT: Auto-merging file.txt
+                STDOUT: CONFLICT (content): Merge conflict in file.txt
+                STDOUT: Automatic merge failed; fix conflicts and then commit the result.
             sage: git.get_state()
             ('merge', 'rebase-i')
 
         Get out of this state::
 
-            sage: git.reset_to_clean_state()
+            sage: git.reset_state()
             sage: git.get_state()
             ()
         """
@@ -393,16 +397,13 @@ class GitInterface(object):
 
         EXAMPLES::
 
-            sage: git._run_git('status', (), {})
-            # On branch master
-            #
-            # Initial commit
-            #
-            nothing to commit (create/copy files and use "git add" to track)
-            (0, None, None, 'git status')
-            sage: git._run_git('status', (), {}, stdout=False)
-            (0, None, None, 'git status')
+            sage: git = test.git_repo().git
+            sage: import subprocess
+            sage: git._run('status', (), {}, popen_stdout=subprocess.PIPE) == \
+            ....:     {'exit_code': 0, 'stdout': '# On branch sageui/1002/public/anything\n# Changes to be committed:\n#   (use "git reset HEAD <file>..." to unstage)\n#\n#\tnew file:   staged_file\n#\n# Changes not staged for commit:\n#   (use "git add <file>..." to update what will be committed)\n#   (use "git checkout -- <file>..." to discard changes in working directory)\n#\n#\tmodified:   foo4.txt\n#\n# Untracked files:\n#   (use "git add <file>..." to include in what will be committed)\n#\n#\tuntracked_file\n', 'cmd': 'git status', 'stderr': None}
+            True
         """ 
+        env = kwds.pop('env', {})
         s = [self.git_cmd, cmd]
         for k, v in kwds.items():
             if len(k) == 1:
@@ -419,7 +420,7 @@ class GitInterface(object):
         complete_cmd = ' '.join(s)
         self._log('cmd', complete_cmd)
 
-        env = dict(os.environ)
+        env.update(os.environ)
         env['GIT_DIR'] = self.git_dir
         env['GIT_WORK_TREE'] = self.work_tree
         if cmd == 'stash':
@@ -442,12 +443,6 @@ class GitInterface(object):
             self._log('stderr', stderr)
         return {'exit_code':retcode, 'stdout':stdout, 'stderr':stderr, 'cmd':complete_cmd}
 
-    # commands that cannot change the working tree even with
-    # some crazy flags set - these commands should be safe
-    _safe_commands = [
-        'config', 'diff', 'grep', 'log', 'ls_remote', 'remote', 'reset', 'show', 
-        'show_ref', 'status', 'symbolic_ref' ]
-        
     def _run(self, cmd, args, kwds={}, popen_stdout=None, popen_stderr=None, exit_code_to_exception=True):
         if cmd not in self._safe_commands:
             self._check_user_email()
@@ -477,15 +472,46 @@ class GitInterface(object):
         EXAMPLES::
 
             sage: git.execute('status')
-            # On branch master
-            #
-            # Initial commit
-            #
-            nothing to commit (create/copy files and use "git add" to track)
+            DEBUG cmd: git status
+            DEBUG stdout: # On branch sageui/1002/public/anything
+            DEBUG stdout: # Changes to be committed:
+            DEBUG stdout: #   (use "git reset HEAD <file>..." to unstage)
+            DEBUG stdout: #
+            DEBUG stdout: #	new file:   staged_file
+            DEBUG stdout: #
+            DEBUG stdout: # Changes not staged for commit:
+            DEBUG stdout: #   (use "git add <file>..." to update what will be committed)
+            DEBUG stdout: #   (use "git checkout -- <file>..." to discard changes in working directory)
+            DEBUG stdout: #
+            DEBUG stdout: #	modified:   foo4.txt
+            DEBUG stdout: #
+            DEBUG stdout: # Untracked files:
+            DEBUG stdout: #   (use "git add <file>..." to include in what will be committed)
+            DEBUG stdout: #
+            DEBUG stdout: #	untracked_file
+            '# On branch sageui/1002/public/anything\n# Changes to be committed:\n#   (use "git reset HEAD <file>..." to unstage)\n#\n#\tnew file:   staged_file\n#\n# Changes not staged for commit:\n#   (use "git add <file>..." to update what will be committed)\n#   (use "git checkout -- <file>..." to discard changes in working directory)\n#\n#\tmodified:   foo4.txt\n#\n# Untracked files:\n#   (use "git add <file>..." to include in what will be committed)\n#\n#\tuntracked_file\n'
+
             sage: git.execute('status', foo=True) # --foo is not a valid parameter
             Traceback (most recent call last):
             ...
-            GitError: git returned with non-zero exit code (129)
+            sageui.model.git_error.GitError: git returned with non-zero exit code (129) 
+            when executing "git status --foo"
+                STDERR: error: unknown option `foo'
+                STDERR: usage: git status [options] [--] <pathspec>...
+                STDERR: 
+                STDERR:     -v, --verbose         be verbose
+                STDERR:     -s, --short           show status concisely
+                STDERR:     -b, --branch          show branch information
+                STDERR:     --porcelain           machine-readable output
+                STDERR:     --long                show status in long format (default)
+                STDERR:     -z, --null            terminate entries with NUL
+                STDERR:     -u, --untracked-files[=<mode>]
+                STDERR:                           show untracked files, optional modes: all, normal, no. (Default: all)
+                STDERR:     --ignored             show ignored files
+                STDERR:     --ignore-submodules[=<when>]
+                STDERR:                           ignore changes to submodules, optional when: all, dirty, untracked. (Default: all)
+                STDERR:     --column[=<style>]    list untracked files in columns
+                STDERR: 
         """
         result = self._run(cmd, args, kwds,
                            popen_stdout=subprocess.PIPE,
@@ -496,24 +522,9 @@ class GitInterface(object):
 
     def _check_user_email(self):
         r"""
-        Make sure that a real name and an email are set for git. These will
-        show up next to any commit that user creates.
+        Make sure that a real name and an email are set for git. 
 
-        TESTS::
-
-            sage: import os
-            sage: from sage.dev.git_interface import GitInterface, SILENT, SUPER_SILENT
-            sage: from sage.dev.test.config import DoctestConfig
-            sage: from sage.dev.test.user_interface import DoctestUserInterface
-            sage: config = DoctestConfig()
-            sage: del config['git']['user.name']
-            sage: del config['git']['user.email']
-            sage: UI = DoctestUserInterface(config["UI"])
-            sage: git = GitInterface(config["git"], UI)
-            sage: os.chdir(config['git']['src'])
-            sage: UI.append("Doc Test")
-            sage: UI.append("doc@test")
-            sage: git._check_user_email()
+        These will show up next to any commit that user creates.  
         """
         if self._user_email_set:
             return
@@ -525,45 +536,6 @@ class GitInterface(object):
             raise UserEmailException()
 
 
-
-
-git_commands = (
-    "add",
-    "am",
-    "apply",
-    "bisect",
-    "branch",
-    "config",
-    "checkout",
-    "cherry_pick",
-    "clean",
-    "clone",
-    "commit",
-    "diff",
-    "fetch",
-    "for_each_ref",
-    "format_patch",
-    "grep",
-    "init",
-    "log",
-    "ls_files",
-    "ls_remote",
-    "merge",
-    "mv",
-    "pull",
-    "push",
-    "rebase",
-    "remote",
-    "reset",
-    "rev_list",
-    "rm",
-    "show",
-    "show_ref",
-    "stash",
-    "status",
-    "symbolic_ref",
-    "tag"
-)
 
 def create_wrapper(git_cmd_underscore):
     r"""
@@ -587,7 +559,7 @@ def create_wrapper(git_cmd_underscore):
 
 
 
-for command in git_commands:
+for command in GitInterface._safe_commands + GitInterface._unsafe_commands:
     setattr(GitInterface, command, create_wrapper(command))
     setattr(GitInterfaceSilentProxy, command, create_wrapper(command))
     setattr(GitInterfaceExitCodeProxy, command, create_wrapper(command))

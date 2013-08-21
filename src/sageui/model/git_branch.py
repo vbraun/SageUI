@@ -7,9 +7,7 @@ EXAMPLES::
 
     sage: repo = test.git_repo()
     sage: repo.local_branches()
-    [Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
-
-
+    [Git branch branch1, Git branch branch2, Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
 """
 
 ##############################################################################
@@ -58,6 +56,7 @@ def GitBranch(git_repository, name, commit=None):
             return GitManagedBranch(git_repository, description, number, commit)
         except ValueError:
             pass
+    raise ValueError('invalid branch name: {0}'.format(name))
     
 
 
