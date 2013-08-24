@@ -24,6 +24,7 @@ Container for Configuration Data
 
 import os
 import json
+import logging
 
 
 class Config(object):
@@ -40,7 +41,8 @@ class Config(object):
         try:        
             with open(self.settings_file, 'r', encoding='utf-8') as f:
                 self._data = json.JSONDecoder().decode(f.read())
-        except (IOError, OSError, ValueError):
+        except (EOFError, IOError, OSError, ValueError) as e:
+            logging.info('loading configuration failed: %s', e)
             self._data = dict()
         
     @property

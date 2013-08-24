@@ -88,6 +88,7 @@ class Presenter(object):
     def checkout_branch(self, branch_name, ticket_number=None):
         branch = self.model.checkout_branch(branch_name, ticket_number)
         branches = self.model.list_branches()
+        self.show_git_window()
         self.view.set_git_branches(branches, branch)
 
     def base_commit_selected(self, base_commit):
@@ -222,6 +223,10 @@ class Presenter(object):
     # Handle configuration change
 
     def config_sage_changed(self):
-        self.model.sage_changed()
+        """
+        This is called when the underlying Sage installation is changed,
+        for example via the preferences.
+        """
+        self.model.config_sage_changed()
         self.view.config_sage_changed(self.model.config)
         

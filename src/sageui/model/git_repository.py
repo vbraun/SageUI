@@ -167,12 +167,14 @@ class GitRepository(object):
             sage: repo.local_branches()
             [Git branch branch1, Git branch branch2, Git branch master, Git branch my_branch, Git branch sageui/1000/u/user/description, Git branch sageui/1001/u/alice/work, Git branch sageui/1001/u/bob/work, Git branch sageui/1002/public/anything, Git branch sageui/none/u/user/description]
        """
+        head_prefix = 'refs/heads/'
         branches = self.git.for_each_ref(
-            'refs/heads/', sort='committerdate', format="%(objectname) %(refname:short)")
+            head_prefix, sort='committerdate', format='%(objectname) %(refname)')
         result = []
         for line in branches.splitlines():
             sha1 = line[0:40]
-            name = line[41:]
+            name = line[41 + len(head_prefix):]
+            logging.debug('found local branch: %s %s', name, sha1)
             branch = GitBranch(self, name, sha1)
             if branch:
                 result.append(branch)

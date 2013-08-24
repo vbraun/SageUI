@@ -27,6 +27,7 @@ local database nor are they always up to date, of course.
 
 import os
 import pickle
+import logging
 
 from .trac_ticket import TracTicket, TracTicket_class
 
@@ -42,9 +43,10 @@ class TracDatabase(object):
         'trac_database.pickle') 
         try:
             with open(filename, 'wb') as f:
-                pickle.dumps(self._data, f)
+                pickle.dump(self._data, f)
             return True
-        except (IOError, OSError, pickle.UnpicklingError, TypeError):
+        except (IOError, OSError, pickle.UnpicklingError, TypeError) as e:
+            logging.info('saving trac cache failed: %s', e)
             self._data = dict()
             return False
         
@@ -52,9 +54,10 @@ class TracDatabase(object):
         filename = os.path.join(directory_name, 'trac_database.pickle')
         try:
             with open(filename, 'rb') as f:
-                self._data = pickle.loads(f)
+                self._data = pickle.load(f)
             return True
-        except (IOError, OSError, pickle.UnpicklingError, TypeError):
+        except (EOFError, IOError, OSError, pickle.UnpicklingError, TypeError) as e:
+            logging.info('loading trac cache failed: %s', e)
             self._data = dict()
             return False
 

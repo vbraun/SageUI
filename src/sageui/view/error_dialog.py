@@ -21,17 +21,17 @@ Generic Error Dialog
 ##############################################################################
 
  
-from .window import Window
+from .window import DialogWindow
 from .buildable import Buildable
 
 
-class ErrorDialog(Buildable, Window):
+class ErrorDialog(Buildable, DialogWindow):
 
     def __init__(self, presenter, glade_file, title, text):
         self.presenter = presenter
         Buildable.__init__(self, ['error_dialog'])
         builder = self.get_builder(glade_file)
-        Window.__init__(self, builder, 'error_dialog')
+        DialogWindow.__init__(self, builder, 'error_dialog')
         self.window.set_property('text', title)
         self.window.set_property('secondary_text', text)
         builder.connect_signals(self)

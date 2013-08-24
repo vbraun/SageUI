@@ -61,10 +61,6 @@ class View(object):
             geometry['trac_window'] = self.trac_window.save_geometry()
         if self.git_window_constructed:
             geometry['git_window'] = self.git_window.save_geometry()
-        if self.about_dialog_constructed:
-            geometry['about_dialog'] = self.about_dialog.save_geometry()
-        if self.preferences_window_constructed:
-            geometry['preferences_window'] = self.preferences_window.save_geometry()
         config.window_geometry = geometry
 
     def restore_geometry(self, config):
@@ -173,7 +169,6 @@ class View(object):
         self.about_dialog_constructed = True
         from .about_dialog import AboutDialog
         about = AboutDialog(self.presenter, self.glade_file)
-        about.restore_geometry(self.window_geometry.get('about_dialog', {}))
         return about
 
     def show_about_dialog(self):
@@ -192,7 +187,6 @@ class View(object):
         self.preferences_window_constructed = True
         from .preferences_dialog import PreferencesDialog
         prefs = PreferencesDialog(self.presenter, self.glade_file)
-        prefs.restore_geometry(self.window_geometry.get('preferences_dialog', {}))
         return prefs
 
     def show_preferences_dialog(self, config):

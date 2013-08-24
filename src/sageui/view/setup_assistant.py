@@ -24,11 +24,11 @@ Assistant/wizzard/droid to guide you through setting up SAGE_ROOT
 
 import logging
  
-from .window import Window
+from .window import DialogWindow
 from .buildable import Buildable
 
 
-class SetupAssistant(Buildable, Window):
+class SetupAssistant(Buildable, DialogWindow):
 
     def __init__(self, presenter, glade_file, sage_root, callback):
         self.presenter = presenter
@@ -36,7 +36,7 @@ class SetupAssistant(Buildable, Window):
         Buildable.__init__(self, ['setup_assistant', 'setup_sage_root',
                                   'setup_confirmation', 'setup_content'])
         builder = self.get_builder(glade_file)
-        Window.__init__(self, builder, 'setup_assistant')
+        DialogWindow.__init__(self, builder, 'setup_assistant')
         self.sage_root = builder.get_object('setup_sage_root')
         self.content = builder.get_object('setup_content')
         if sage_root is None:

@@ -21,11 +21,11 @@ Preferences
 ##############################################################################
 
 
-from window import Window
-from buildable import Buildable
+from .window import DialogWindow
+from .buildable import Buildable
 
 
-class PreferencesDialog(Buildable, Window):
+class PreferencesDialog(Buildable, DialogWindow):
 
     def __init__(self, presenter, glade_file):
         self.presenter = presenter
@@ -33,7 +33,7 @@ class PreferencesDialog(Buildable, Window):
                                   'prefs_ok', 'prefs_cancel',
                                   'prefs_root_value', 'prefs_version_value'])
         builder = self.get_builder(glade_file)
-        Window.__init__(self, builder, 'prefs_dialog')
+        DialogWindow.__init__(self, builder, 'prefs_dialog')
         self.ok_button = builder.get_object('prefs_ok')
         self.cancel_button = builder.get_object('prefs_cancel')
         self.sage_root = builder.get_object('prefs_root_value')
