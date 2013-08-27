@@ -56,6 +56,9 @@ class View(object):
         self.window_geometry = dict()
 
     def save_geometry(self, config):
+        """
+        Save the width x height of the windows for which we want to restore it.
+        """
         geometry = self.window_geometry
         if self.trac_window_constructed:
             geometry['trac_window'] = self.trac_window.save_geometry()
