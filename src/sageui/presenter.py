@@ -26,9 +26,9 @@ about data nor about the gui, it just ties the two together.
 
 
 from .model.trac_error import TracError
+from .editor_presenter import EditorPresenter
 
-
-class Presenter(object):
+class Presenter(EditorPresenter):
 
     def __init__(self, view_class, model_class):
         self.view = view_class(self)
@@ -37,16 +37,9 @@ class Presenter(object):
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, None, self.setup_assistant_first_run_finished)
         else:
+            self.show_editor_window()
             self.show_commandline_window()
             #self.show_trac_window()
-
-            #self.show_git_window()
-            #repo = self.model.repo
-            #base = repo.base_commit.get_history()[4]
-            #repo.base_commit = base
-            #changes = repo.changes()
-            #self.view.set_git_base_commit(base, changes)
-            #self.view.set_git_file(changes[3])
  
 
 

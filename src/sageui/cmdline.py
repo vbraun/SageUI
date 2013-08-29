@@ -36,6 +36,12 @@ def check_gui_prerequisites():
         logging.critical('You need the Python GTK interface!')
         sys.exit(1)
     try:
+        from gi.repository import GtkSource, GObject
+        GObject.type_register(GtkSource.View)
+    except ImportError:
+        logging.critical('You need the GtkSourceView widget!')
+        sys.exit(1)        
+    try:
         import cairo
     except ImportError:
         logging.critical('You need the Python Cairo interface!')

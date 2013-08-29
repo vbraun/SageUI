@@ -51,6 +51,7 @@ class View(object):
         self.commandline_window_constructed = False
         self.trac_window_constructed = False
         self.git_window_constructed = False
+        self.editor_window_constructed = False
         self.about_dialog_constructed = False
         self.preferences_window_constructed = False
         self.window_geometry = dict()
@@ -64,6 +65,8 @@ class View(object):
             geometry['trac_window'] = self.trac_window.save_geometry()
         if self.git_window_constructed:
             geometry['git_window'] = self.git_window.save_geometry()
+        if self.editor_window_constructed:
+            geometry['editor_window'] = self.editor_window.save_geometry()
         config.window_geometry = geometry
 
     def restore_geometry(self, config):
@@ -163,6 +166,25 @@ class View(object):
         
     def set_git_file(self, git_file):
         self.git_window.set_diff(git_file)
+
+    ###################################################################
+    # The editor window
+
+    @cached_property
+    def editor_window(self):
+        self.editor_window_constructed = True
+        from .editor_window import EditorWindow
+        editor = EditorWindow(self.presenter, self.glade_file)
+        editor.restore_geometry(self.window_geometry.get('editor_window', {}))
+        return editor
+        
+    def show_editor_window(self):
+        self._open_windows.add(self.editor_window)
+        self.editor_window.present()
+
+    def hide_editor_window(self):
+        self.editor_window.hide()
+        self._open_windows.remove(self.editor_window)
 
     ###################################################################
     # The about dialog
