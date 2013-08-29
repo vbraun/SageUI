@@ -174,10 +174,12 @@ class GitRepository(object):
         for line in branches.splitlines():
             sha1 = line[0:40]
             name = line[41 + len(head_prefix):]
-            logging.debug('found local branch: %s %s', name, sha1)
-            branch = GitBranch(self, name, sha1)
-            if branch:
+            try:
+                branch = GitBranch(self, name, sha1)
+                logging.debug('found local branch: %s %s', name, sha1)
                 result.append(branch)
+            except ValueError as e:
+                logging.debug('cannot use local branch %s %s: %s', name, sha1, str(e))
         return result
 
     def current_branch(self):

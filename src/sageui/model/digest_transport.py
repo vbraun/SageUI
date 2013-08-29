@@ -127,8 +127,8 @@ class DigestTransport(SafeTransport):
             self.verbose = verbose
             return self.parse_response(response)
         except Fault as e:
-            from trac_error import TracInternalError
+            from .trac_error import TracInternalError
             raise TracInternalError(e)
         except IOError as e:
-            from trac_error import TracConnectionError
+            from .trac_error import TracConnectionError
             raise TracConnectionError(e)

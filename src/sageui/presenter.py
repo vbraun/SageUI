@@ -144,7 +144,7 @@ class Presenter(EditorPresenter):
             try:
                 self.model.trac.load(ticket_number) 
             except TracError as msg:
-                return self.show_error('Cannot download ticket', str(msg))
+                return self.show_error(self.view.trac_window, 'Cannot download ticket', str(msg))
         self.model.trac.set_current_ticket(ticket_number)
         loaded_ticket = self.model.trac.get_current_ticket()
         ticket_list = self.model.trac.get_ticket_list()

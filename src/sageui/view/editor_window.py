@@ -49,12 +49,12 @@ class EditorWindow(Buildable, Window):
     def _init_sourceview(self, sourceview):
         self.sourceview = sourceview
         self.buffer = GtkSource.Buffer()
-        self.sourceview.set_buffer(self.buffer)
+        sourceview.set_buffer(self.buffer)
         # bg = Gdk.RGBA(0.8, 0.8, 0.8, 1)
         # gutter = self.sourceview.get_gutter(Gtk.TextWindowType.LEFT)
         # TODO: set gutter background color
         fontdesc = Pango.FontDescription("monospace")
-        textview.modify_font(fontdesc)
+        sourceview.modify_font(fontdesc)
 
     def set_language(self):
         mgr = GtkSource.LanguageManager()
