@@ -26,12 +26,23 @@ This is a mixin class for the presenter
 
 class EditorPresenter(object):
 
-    def show_editor_window(self):
-        return self.view.show_editor_window()
+    def show_editor_window(self, buf):
+        return self.view.show_editor_window(buf)
 
     def hide_editor_window(self):
         self.view.hide_editor_window()
         if not self.view.have_open_window():
             self.terminate()
 
-    
+    def new_attached_file(self):
+        buf = self.model.new_attached_buffer()
+        attach = "attach('{0}')\n".format(buf.full_qualified_name)
+        print(attach)
+        self.paste_into_terminal(attach)
+        self.show_editor_window(buf)
+
+    def save_file(self, buffer_id):
+        content = self.view.get_editor_content(buffer_id)
+        buf = self.model.editor.buffer_from_id(buffer_id)
+        buf.set_content(content)
+        buf.save_content()

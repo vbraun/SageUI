@@ -37,8 +37,8 @@ class Presenter(EditorPresenter):
         if self.model.config.sage_root is None:
             self.show_setup_assistant(None, None, self.setup_assistant_first_run_finished)
         else:
-            self.show_editor_window()
             self.show_commandline_window()
+            self.new_attached_file()
             #self.show_trac_window()
  
 
@@ -61,6 +61,9 @@ class Presenter(EditorPresenter):
         self.view.hide_commandline_window()
         if not self.view.have_open_window():
             self.terminate()
+
+    def paste_into_terminal(self, commands):
+        self.view.paste_into_terminal(commands)
 
     ###################################################################
     # The git window

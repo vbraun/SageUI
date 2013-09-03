@@ -101,8 +101,14 @@ class View(object):
 
     def show_commandline_window(self, path, command):
         self._open_windows.add(self.commandline_window)
-        self.commandline_window.run(path, command)
         self.commandline_window.present()
+        self.run_in_terminal(path, command)
+
+    def run_in_terminal(self, path, command):
+        self.commandline_window.run(path, command)
+
+    def paste_into_terminal(self, commands):
+        self.commandline_window.paste(commands)
 
     def hide_commandline_window(self):
         self.commandline_window.hide()
@@ -178,13 +184,18 @@ class View(object):
         editor.restore_geometry(self.window_geometry.get('editor_window', {}))
         return editor
         
-    def show_editor_window(self):
-        self._open_windows.add(self.editor_window)
-        self.editor_window.present()
+    def show_editor_window(self, buf):
+        edit = self.editor_window
+        self._open_windows.add(edit)
+        edit.add_tab(buf)
+        edit.present()
 
     def hide_editor_window(self):
         self.editor_window.hide()
         self._open_windows.remove(self.editor_window)
+
+    def get_editor_content(self, buffer_id):
+        return self.editor_window.get_content(buffer_id)
 
     ###################################################################
     # The about dialog

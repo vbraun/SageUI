@@ -28,18 +28,16 @@ from gi.repository import GLib, Gdk, Gtk, Vte
 class TerminalWidget(Vte.Terminal):
     __gtype_name__ = 'TerminalWidget'
     __gsignals__ = {
-        #"expose_event": "override" 
+        #"expose_event": "override"
+        'char_size_changed': 'override',
         }
  
     def __init__(self):
         Vte.Terminal.__init__(self)
 
-    def configure(self):
+    def fork_command(self, executable):
         self.set_color_background(Gdk.color_parse('white'))
         self.set_color_foreground(Gdk.color_parse('black'))
-        self.set_size_request(80*self.char_width, -1)
-
-    def fork_command(self, executable):
         return self.fork_command_full(
             Vte.PtyFlags.DEFAULT,
             os.environ['HOME'],
@@ -49,3 +47,9 @@ class TerminalWidget(Vte.Terminal):
             None,
             None,
         )
+
+    def do_char_size_changed(self, width, height):
+        self.set_size_request(80*width, -1)
+
+
+

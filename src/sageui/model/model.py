@@ -28,6 +28,7 @@ from .config import Config
 from .trac_server import TracServer
 from .git_repository import GitRepository
 from .sage_installation import SageInstallation
+from .editor import Editor
 
 
 class Model:
@@ -40,7 +41,7 @@ class Model:
                                c.trac_server_anonymous_xmlrpc)
         self.trac.database.load(c.sageui_directory)
         self.repo = GitRepository(c.sage_root)
-    
+        self.editor = Editor(c.sageui_directory)
 
     def terminate(self):
         self.trac.database.save(self.config.sageui_directory)
@@ -57,6 +58,15 @@ class Model:
     def checkout_branch(self, branch_name, ticket_number=None):
         logging.info('checking out {} {}'.format(str(branch_name), str(ticket_number)))
         return self.repo.checkout_branch(branch_name, ticket_number)
+
+    ###################################################################
+    # Editor
+
+    def new_attached_buffer(self):
+        buf = self.editor.new_buffer()
+        buf.attach()
+        return buf
+
 
 
     ###################################################################

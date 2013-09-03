@@ -44,11 +44,15 @@ class CommandlineWindow(Buildable, Window):
         self.terminal = builder.get_object('terminal')
         self.terminal_adjustment = builder.get_object('terminal_adjustment')
         builder.connect_signals(self)
-        
+
     def run(self, path, command):
-        exe = os.path.join(path, command)
+        print('run', command)
         self.terminal.reset(True, False)
+        exe = os.path.join(path, command)
         self.terminal.fork_command(exe)
+
+    def paste(self, commands):
+        self.terminal.feed_child(commands, -1)
 
     def on_cmdline_window_delete_event(self, widget, data=None):
         self.presenter.hide_commandline_window()
@@ -57,9 +61,6 @@ class CommandlineWindow(Buildable, Window):
     def on_cmdline_window_destroy(self, widget, data=None):
         logging.info('TODO: destroyed. autosave?')
         
-    def on_cmdline_window_map(self, widget, data=None):
-        self.terminal.configure()
-
     def on_cmdline_menu_about_activate(self, widget, data=None):
         self.presenter.show_about_dialog()
 
@@ -67,7 +68,7 @@ class CommandlineWindow(Buildable, Window):
         self.presenter.hide_commandline_window()
 
     def on_cmdline_menu_new_activate(self, widget, data=None):
-        self.presenter.show_notification(self, "todo: new attached file")
+        self.presenter.new_attached_file()
         
     def on_cmdline_menu_open_activate(self, widget, data=None):
         self.presenter.show_notification(self, "todo: open file and attach")
